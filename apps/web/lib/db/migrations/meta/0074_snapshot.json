@@ -1,0 +1,23 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "id": "0085_add_session_version",
+  "prevId": "0084_add_identity_to_insight_settings",
+  "name": "0085_add_session_version",
+  "formatter": "pg",
+  "statements": [
+    {
+      "type": "alter_table",
+      "tableName": "User",
+      "schema": "",
+      "columns": [
+        {
+          "name": "session_version",
+          "type": "integer",
+          "notNull": true,
+          "default": "1"
+        }
+      ]
+    }
+  ]
+}

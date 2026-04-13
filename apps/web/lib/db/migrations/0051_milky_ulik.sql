@@ -1,0 +1,1 @@
+ALTER TABLE "survey" DROP COLUMN IF EXISTS "industry_details";

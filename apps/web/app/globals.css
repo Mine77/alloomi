@@ -1,0 +1,585 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  /**
+   * Unified large card style (shared between single and multi-column layouts)
+   * White background, rounded corners, border, no shadow; used in PageContentCard and AgentLayout center/right areas
+   */
+  .content-area-card {
+    @apply rounded-2xl bg-card border border-border;
+  }
+
+  /* Performance optimization for long lists using content-visibility */
+  .insight-card {
+    content-visibility: auto;
+    contain-intrinsic-size: 0 200px;
+  }
+
+  .message-item {
+    content-visibility: auto;
+    contain-intrinsic-size: 0 150px;
+  }
+
+  .markdown-wrapper {
+    @apply max-w-full break-words text-[15px] leading-normal text-slate-950 dark:text-slate-50;
+  }
+
+  .markdown-wrapper * {
+    @apply max-w-full break-words;
+  }
+
+  .markdown-wrapper th,
+  .markdown-wrapper td {
+    max-width: none;
+  }
+
+  .markdown-wrapper p {
+    @apply my-1.5;
+  }
+
+  .markdown-wrapper ul,
+  .markdown-wrapper ol {
+    @apply my-1.5 ml-4;
+  }
+
+  .markdown-wrapper li {
+    @apply py-0.5 min-w-0;
+  }
+
+  .markdown-wrapper a {
+    @apply text-primary underline-offset-4 hover:underline break-words;
+  }
+
+  .markdown-wrapper table {
+    @apply table w-full overflow-x-auto;
+  }
+
+  .markdown-wrapper tbody {
+    @apply table-row-group;
+  }
+
+  .markdown-wrapper thead {
+    @apply table-header-group;
+  }
+
+  .markdown-wrapper tr {
+    @apply table-row;
+  }
+
+  .markdown-wrapper th,
+  .markdown-wrapper td {
+    @apply table-cell;
+  }
+
+  .markdown-wrapper th,
+  .markdown-wrapper td {
+    max-width: none;
+  }
+
+  .insight-detail-content {
+    width: 100%;
+    max-width: 100%;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  .insight-detail-content * {
+    max-width: 100%;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  .insight-detail-content pre {
+    white-space: pre-wrap;
+  }
+}
+
+:root {
+  --foreground-rgb: 17, 24, 39;
+  --background-start-rgb: 249, 250, 251;
+  --background-end-rgb: 255, 255, 255;
+
+  /* ========== New design system tokens (single source of truth, consistent with design-spec §1) ========== */
+  /* Primary color - Blue palette (50-950), main color 500 #5D90D4, gradient 500->700 */
+  --primary-50: #f0f5fc;
+  --primary-100: #e3ecf9;
+  --primary-200: #cddff4;
+  --primary-300: #a9caeb;
+  --primary-400: #7faee0;
+  --primary-500: #5d90d4;
+  --primary-600: #4272c1;
+  --primary-700: #13408f;
+  --primary-800: #29427e;
+  --primary-900: #253964;
+  --primary-950: #192441;
+  /* Primary color gradient - Main color 700, gradient 600->700 */
+  --primary-start: #4272c1;
+  --primary-end: #13408f;
+
+  /* Accent color palette (50-950), main color 700 #B9580A */
+  --accent-50: #fdf6ef;
+  --accent-100: #faebd9;
+  --accent-200: #f4d2b2;
+  --accent-300: #edb383;
+  --accent-400: #e48c52;
+  --accent-500: #db6e2b;
+  --accent-600: #cb5621;
+  --accent-700: #b9580a;
+  --accent-800: #934610;
+  --accent-900: #763a10;
+  --accent-950: #401c06;
+  /** Accent main color (700), used for CTAs, tags, etc. */
+  --accent-brand: #b9580a;
+  /* Accent background gradient (50->100) */
+  --accent-bg-start: #fdf6ef;
+  --accent-bg-end: #faebd9;
+
+  /* Marketing / Brand color specifications */
+  --color-background-card: #ffffff;
+  --color-background-secondary: #f9fafb;
+  --color-background-flowlight: #fef3c7;
+  /* Match text color in images #111827 */
+  --color-foreground-secondary: #111827;
+  --color-foreground-muted: #6b7280;
+  --color-foreground-primary: #f8fafc;
+  --color-foreground-primary-80: rgba(248, 250, 252, 0.7);
+  --color-deepwater: var(
+    --primary-end
+  ); /* Points to new token, kept for compatibility */
+  --color-flowlight: var(--accent-brand);
+  --color-gold: var(--accent-brand); /* Unified with --accent-brand */
+  --color-surfaceBlue: #f3f4f6;
+  --color-border-primary: #e5e7eb;
+  --color-border-secondary: #e5e7eb;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes flow {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .brand-gradient {
+    background-image: linear-gradient(
+      135deg,
+      hsl(var(--brand-blue)) 0%,
+      hsl(var(--brand-magenta)) 100%
+    );
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .safe-area-inset-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  .safe-area-inset-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .safe-area-inset-left {
+    padding-left: env(safe-area-inset-left, 0px);
+  }
+
+  .safe-area-inset-right {
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+
+  .mobile-bottom-spacing {
+    padding-bottom: calc(120px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .animate-flow {
+    animation: flow 20s ease-in-out infinite !important;
+  }
+
+  .sidebar-hint-flow {
+    background-image: linear-gradient(
+      135deg,
+      rgba(254, 242, 242, 0.78) 0%,
+      rgba(255, 247, 247, 0.72) 35%,
+      rgba(255, 255, 255, 0.82) 70%,
+      rgba(254, 242, 242, 0.78) 100%
+    );
+    background-size: 220% 220%;
+    animation: flow 16s ease-in-out infinite;
+  }
+
+  /* ========== New design system gradient utility classes (design-spec §1) ========== */
+  /** Primary color gradient 180deg, #4272C1(600) -> #13408F(700) */
+  .bg-primary-gradient {
+    background-image: linear-gradient(
+      180deg,
+      var(--primary-start) 0%,
+      var(--primary-end) 100%
+    );
+  }
+
+  /** Accent background gradient 180deg, #FDF6EF(50) -> #FAEBD9(100) */
+  .bg-accent-subtle {
+    background-image: linear-gradient(
+      180deg,
+      var(--accent-bg-start) 0%,
+      var(--accent-bg-end) 100%
+    );
+  }
+}
+
+@layer base {
+  /* Material Symbols Rounded unified style */
+  .material-symbols-rounded {
+    /* font-variation-settings and font-size controlled by component inline styles, no longer hardcoded here */
+    font-family: "Material Symbols Rounded";
+    font-weight: normal;
+    font-style: normal;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-feature-settings: "liga";
+    -webkit-font-smoothing: antialiased;
+    /* Ensure icon is vertically centered with text */
+    vertical-align: middle;
+    /* Fine-tune alignment, compensate for visual offset of the font */
+    transform: translateY(-0.05em);
+  }
+
+  /* Material icon selected state */
+  .material-symbols-rounded.filled {
+    /* font-variation-settings controlled by component inline styles */
+  }
+
+  :root {
+    --background: 220 10% 98%;
+    --foreground: 220 44% 10%;
+    /* Sans-serif: unified to Noto Sans SC */
+    --font-sans:
+      "Noto Sans SC", "思源黑体", "PingFang SC", "Helvetica Neue",
+      -apple-system, BlinkMacSystemFont, sans-serif;
+    /* Serif: unified to Noto Serif SC */
+    --font-serif: "Noto Serif SC", "思源宋体", "Songti SC", Georgia, serif;
+    --font-mono:
+      ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    --surface: 220 10% 98%;
+    --surface-elevated: 220 12% 97%;
+    --surface-hover: 220 20% 95%;
+    /* Page/secondary background area: #f9fafb, consistent with image design */
+    --surface-muted: 220 17% 97%;
+    /* Card background unified to white (consistent between large cards and UI cards) */
+    --card: 0 0% 100%;
+    --card-foreground: var(--foreground);
+    --popover: 0 0% 100%;
+    --popover-foreground: 227 28% 12%;
+    /* New design system primary color #13408F (blue palette 700), HSL for Tailwind hsl(var(--primary)) */
+    --primary: 218 76% 32%;
+    --primary-foreground: 0 0% 100%;
+    --brand-blue: 218 76% 32%;
+    --brand-magenta: 218 76% 32%;
+    --primary-blue: 218 76% 32%;
+    --primary-blue-text: 218 76% 18%;
+    /* Theme color system - Blue theme (primary color 700) */
+    --theme-vivid-orange: 218 76% 32%;
+    --theme-electric-orange: 216 55% 55%;
+    --theme-amber: 214 52% 48%;
+    --theme-yellow-accent: 216 60% 42%;
+    /* Dynamic theme color system - supports runtime switching */
+    --dynamic-theme-start: 218 76% 32%;
+    --dynamic-theme-main: 216 55% 55%;
+    --dynamic-theme-end: 218 76% 32%;
+    /* Match badge colors in images */
+    --tag-red-text: 0 84% 56%;
+    --tag-red-bg: 358 100% 95%;
+    --tag-orange-bg: 36 92% 96%;
+    --tag-orange-text: 36 92% 42%;
+    --tag-green-bg: 157 89% 96%;
+    --tag-green-text: 157 89% 40%;
+    --secondary: 221 42% 94%;
+    --secondary-foreground: 226 45% 22%;
+    --muted: 220 20% 90%;
+    --muted-foreground: 223 14% 45%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 225 70% 16%;
+    --destructive: 356 75% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 157 64% 42%;
+    --success-foreground: 161 82% 15%;
+    --border: 220 17% 91%;
+    --input: 220 17% 89%;
+    --ring: 218 76% 32%;
+    --chart-1: 218 76% 32%;
+    --chart-2: 216 55% 55%;
+    --chart-3: 214 52% 48%;
+    --chart-4: 216 60% 42%;
+    --chart-5: 220 10% 40%;
+    --radius: 0.75rem;
+    --radius-2xl: 1.5rem;
+    --sidebar-background: 0 0% 96%;
+    --sidebar-foreground: 220 44% 10%;
+    --sidebar-primary: 218 76% 32%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 218 76% 32%;
+    --sidebar-accent-foreground: 220 10% 98%;
+    --sidebar-border: 220 17% 91%;
+    --sidebar-ring: var(--ring);
+    --sidebar-active: 218 76% 32%;
+    --sidebar-active-foreground: 0 0% 100%;
+    --sidebar-hover: 220 10% 98%;
+    --sidebar-hover-foreground: 218 76% 32%;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    font-family: var(--font-sans);
+  }
+
+  body {
+    font-family: inherit;
+    background: hsl(var(--surface-muted));
+    color: hsl(var(--foreground));
+    font-feature-settings:
+      "liga" 1,
+      "kern" 1;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body[data-calm-mode="true"] {
+    background: hsl(var(--background));
+  }
+
+  body[data-calm-mode="true"] .brand-gradient {
+    filter: saturate(0.75) brightness(0.98);
+  }
+
+  body[data-calm-mode="true"] * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 120ms !important;
+  }
+
+  * {
+    @apply border-border;
+    /* Lightweight scrollbar style that feels unobtrusive */
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+
+  /* Webkit scrollbar styles (Chrome, Safari, Edge) */
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 10px;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 10px;
+    transition: background 0.2s ease;
+  }
+
+  /* Show scrollbar on hover */
+  *:hover::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.12);
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.2);
+  }
+
+  /* Firefox scrollbar hover effect */
+  *:hover {
+    scrollbar-color: rgba(0, 0, 0, 0.12) transparent;
+  }
+
+  /* Keep native scrollbar on mobile */
+  @media (max-width: 768px) {
+    * {
+      scrollbar-width: auto;
+      scrollbar-color: auto;
+    }
+
+    *::-webkit-scrollbar {
+      width: auto;
+      height: auto;
+    }
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply text-foreground font-semibold tracking-tight;
+  }
+
+  a {
+    @apply text-primary underline-offset-4 transition-colors hover:text-primary/80;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    scroll-behavior: auto;
+  }
+
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 80ms !important;
+  }
+}
+
+.skeleton {
+  * {
+    pointer-events: none !important;
+  }
+
+  *[class^="text-"] {
+    color: transparent;
+    @apply rounded-md bg-foreground/20 select-none animate-pulse;
+  }
+
+  .skeleton-bg {
+    @apply bg-foreground/10;
+  }
+
+  .skeleton-div {
+    @apply bg-foreground/20 animate-pulse;
+  }
+}
+
+.ProseMirror {
+  outline: none;
+  max-width: 100%;
+  overflow-x: hidden;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.cm-editor,
+.cm-gutters {
+  @apply bg-background dark:bg-zinc-800 outline-none selection:bg-zinc-900 !important;
+}
+
+.ͼo.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground,
+.ͼo.cm-selectionBackground,
+.ͼo.cm-content::selection {
+  @apply bg-zinc-200 dark:bg-zinc-900 !important;
+}
+
+.cm-activeLine,
+.cm-activeLineGutter {
+  @apply bg-transparent !important;
+}
+
+.cm-activeLine {
+  @apply rounded-r-sm !important;
+}
+
+.cm-lineNumbers {
+  @apply min-w-7;
+}
+
+.cm-foldGutter {
+  @apply min-w-3;
+}
+
+.cm-lineNumbers .cm-activeLineGutter {
+  @apply rounded-l-sm !important;
+}
+
+.suggestion-highlight {
+  @apply bg-primary/20 hover:bg-primary/30 dark:hover:bg-primary/40 dark:text-primary-foreground dark:bg-primary/50;
+}
+
+/* Agent Avatar animation delay class */
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+/* Radial gradient fade effect */
+.bg-radial-fade {
+  background: radial-gradient(
+    circle,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 70%,
+    rgba(255, 255, 255, 0.3) 100%
+  );
+}
+
+/* ========== Marketing ========== */
+.text-foreground-primary-80 {
+  color: var(--color-foreground-primary-80) !important;
+}
+
+.text-deepwater {
+  color: var(--color-deepwater);
+}
+
+/** Same source as .bg-primary-gradient, kept old class name for existing references compatibility */
+.bg-deepwater {
+  background-image: linear-gradient(
+    180deg,
+    var(--primary-start) 0%,
+    var(--primary-end) 100%
+  );
+}
+
+/** Same source as .bg-accent-subtle (semi-transparent variant), kept old class name for compatibility */
+.bg-flowlight {
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--accent-bg-end) 60%, transparent) 0%,
+    color-mix(in srgb, var(--accent-bg-start) 60%, transparent) 100%
+  );
+}
+
+.text-flowlight {
+  color: var(--color-flowlight);
+}
+
+.bg-surfaceBlue {
+  background-color: var(--color-surfaceBlue);
+}
+
+.bg-background-card {
+  background-color: var(--color-background-card);
+}

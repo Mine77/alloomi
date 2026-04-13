@@ -1,0 +1,1 @@
+ALTER TABLE "user_contacts" ADD COLUMN "bot_id" text;

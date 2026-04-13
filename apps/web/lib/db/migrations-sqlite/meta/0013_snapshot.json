@@ -1,0 +1,6 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "id": "0013-fix-user-meta-tables",
+  "prevId": "0012-fix-discord-tables"
+}

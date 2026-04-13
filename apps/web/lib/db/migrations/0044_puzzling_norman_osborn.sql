@@ -1,0 +1,1 @@
+ALTER TABLE "Bot" RENAME COLUMN "enable" TO "disable";

@@ -1,19 +1,17 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
-/.pnp
+node_modules
+.pnp
 .pnp.js
 
 # testing
-/coverage
+coverage
 
 # next.js
-/.next/
-/out/
-
-# production
-/build
+.next/
+out/
+build
 
 # misc
 .DS_Store
@@ -23,14 +21,110 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.pnpm-debug.log*
 
 # local env files
-.env*.local
+.env.local
+.env.development.local
+.env.test.local
+.env.test
+.env.production.local
+
+# turbo
+.turbo
+
 .env
-
-# vercel
 .vercel
+.env*.local
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/*
+
+# Ts build info
+tsconfig.tsbuildinfo
+
+# settings
+.vscode
+.cursorignore
+
+# Telegram dependencies
+_td_database
+_td_files
+session_name.session*
+token.json
+
+# Electron
+/dist/
+/build/
+*.dmg
+*.exe
+*.AppImage
+*.deb
+*.rpm
+*.zip
+.electron-data/
+.data.db
+data.db
+
+# Electron local data
+.electron-data/
+*.log
+.env.electron
+
+/build/
+.vs/
+.vscode/
+.idea/
+venv
+.tmp/
+
+.pytest_cache
+__pycache__
+*.pyc
+build-result/
+dist/
+.eggs/
+.wwebjs_auth
+.wwebjs_cache
+.insight
+
+# Rust / Tauri
+src-tauri/target/
+src-tauri/Cargo.lock
+apps/*/src-tauri/target/
+apps/*/src-tauri/Cargo.lock
+
+# Tauri build output
+/src-tauri/target/
+*.dmg
+*.exe
+*.AppImage
+*.deb
+*.rpm
+*.app
+
+# Node.js runtime for Tauri (bundled during build)
+node-runtime/
+apps/*/node-runtime/
+
+cli-bundle/
+apps/*/cli-bundle/
+
+# Skills standalone build (copied during build, not needed)
+apps/skills/
+
+# Cursor rules
+.cursor
+# Claude rules
+.claude
+
+# Local notes
+Note.md
+
+# Tauri bundled app resources (contains embedded .env with secrets)
+**/*.app/Contents/Resources/_up_/
+
+pnpm-lock.yaml

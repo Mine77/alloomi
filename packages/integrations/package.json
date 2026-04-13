@@ -1,0 +1,32 @@
+{
+  "name": "@alloomi/integrations",
+  "version": "0.4.0",
+  "private": true,
+  "type": "module",
+  "description": "Unified package for alloo mi integration packages",
+  "exports": {
+    "./asana": "./asana/src/index.ts",
+    "./asana/client": "./asana/src/client.ts",
+    "./calendar": "./calendar/src/index.ts",
+    "./channels": "./channels/src/index.ts",
+    "./channels/telegram": "./channels/src/telegram.ts",
+    "./channels/whatsapp": "./channels/src/whatsapp.ts",
+    "./channels/weixin": "./channels/src/weixin.ts",
+    "./channels/dingtalk": "./channels/src/dingtalk.ts",
+    "./channels/feishu": "./channels/src/feishu.ts",
+    "./channels/qqbot": "./channels/src/qqbot.ts",
+    "./channels/discord": "./channels/src/discord.ts",
+    "./channels/gmail": "./channels/src/gmail.ts",
+    "./channels/imessage": "./channels/src/imessage.ts",
+    "./channels/docs": "./channels/src/docs.ts",
+    "./channels/hubspot": "./channels/src/hubspot.ts",
+    "./channels/sources/types": "./channels/src/sources/types.ts",
+    "./hubspot": "./hubspot/src/index.ts",
+    "./hubspot/client": "./hubspot/src/client.ts",
+    "./imessage": "./imessage/src/index.ts",
+    "./imessage/adapter": "./imessage/src/adapter.ts"
+  },
+  "scripts": {
+    "build": "echo no build needed"
+  }
+}

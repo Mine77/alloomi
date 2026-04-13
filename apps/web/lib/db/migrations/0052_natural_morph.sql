@@ -1,0 +1,1 @@
+ALTER TABLE "User" ADD COLUMN "finish_on_boarding" boolean DEFAULT false NOT NULL;

@@ -1,0 +1,21 @@
+{
+  "name": "@alloomi/security",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./token-encryption": "./src/token-encryption.ts",
+    "./url-validator": "./src/url-validator.ts"
+  },
+  "dependencies": {
+    "fernet": "^0.4.0"
+  },
+  "devDependencies": {
+    "@alloomi/config": "workspace:*",
+    "typescript": "^5.6.3"
+  },
+  "scripts": {
+    "build": "echo no build needed"
+  }
+}

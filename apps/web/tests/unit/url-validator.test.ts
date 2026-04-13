@@ -1,0 +1,325 @@
+import { describe, beforeEach, afterEach, test, expect, vi } from "vitest";
+
+import {
+  validateUrlForSSRF,
+  fetchWithSSRFProtection,
+  isTrustedStorageUrl,
+  SSRFValidationError,
+} from "@alloomi/security/url-validator";
+
+vi.mock("server-only", () => ({}));
+
+describe("url-validator - SSRF Protection", () => {
+  describe("isTrustedStorageUrl", () => {
+    test("returns true for Vercel Blob URLs", () => {
+      expect(
+        isTrustedStorageUrl("https://public.blob.vercel-storage.com/file.txt"),
+      ).toBe(true);
+      expect(
+        isTrustedStorageUrl("https://custom.vercel-storage.com/path/file"),
+      ).toBe(true);
+    });
+
+    test("returns true for Google Drive URLs", () => {
+      expect(isTrustedStorageUrl("https://drive.google.com/uc?id=123")).toBe(
+        true,
+      );
+      expect(
+        isTrustedStorageUrl("https://storage.googleapis.com/bucket/file"),
+      ).toBe(true);
+      expect(
+        isTrustedStorageUrl("https://lh3.googleusercontent.com/file"),
+      ).toBe(true);
+    });
+
+    test("returns true for Notion URLs", () => {
+      expect(isTrustedStorageUrl("https://www.notion.so/page")).toBe(true);
+      expect(isTrustedStorageUrl("https://notion-static.com/file")).toBe(true);
+    });
+
+    test("returns true for Slack URLs", () => {
+      expect(isTrustedStorageUrl("https://files.slack.com/files/file")).toBe(
+        true,
+      );
+    });
+
+    test("returns true for AWS S3 URLs", () => {
+      expect(isTrustedStorageUrl("https://bucket.s3.amazonaws.com/file")).toBe(
+        true,
+      );
+    });
+
+    test("returns false for unknown URLs", () => {
+      expect(isTrustedStorageUrl("https://example.com/file")).toBe(false);
+      expect(isTrustedStorageUrl("https://attacker.com/exploit")).toBe(false);
+    });
+  });
+
+  describe("validateUrlForSSRF", () => {
+    test("rejects localhost URLs", async () => {
+      await expect(
+        validateUrlForSSRF("http://localhost:8080/file"),
+      ).rejects.toThrow(SSRFValidationError);
+      await expect(validateUrlForSSRF("http://127.0.0.1/file")).rejects.toThrow(
+        SSRFValidationError,
+      );
+      await expect(
+        validateUrlForSSRF("http://127.0.0.1:8080/file"),
+      ).rejects.toThrow(SSRFValidationError);
+      await expect(validateUrlForSSRF("http://127.1.1.1/file")).rejects.toThrow(
+        SSRFValidationError,
+      );
+    });
+
+    test("rejects private IP ranges", async () => {
+      // 10.0.0.0/8
+      await expect(validateUrlForSSRF("http://10.0.0.1/file")).rejects.toThrow(
+        SSRFValidationError,
+      );
+      await expect(
+        validateUrlForSSRF("http://10.255.255.255/file"),
+      ).rejects.toThrow(SSRFValidationError);
+
+      // 172.16.0.0/12
+      await expect(
+        validateUrlForSSRF("http://172.16.0.1/file"),
+      ).rejects.toThrow(SSRFValidationError);
+      await expect(
+        validateUrlForSSRF("http://172.31.255.255/file"),
+      ).rejects.toThrow(SSRFValidationError);
+
+      // 192.168.0.0/16
+      await expect(
+        validateUrlForSSRF("http://192.168.1.1/file"),
+      ).rejects.toThrow(SSRFValidationError);
+      await expect(
+        validateUrlForSSRF("http://192.168.255.255/file"),
+      ).rejects.toThrow(SSRFValidationError);
+
+      // 169.254.0.0/16 - Link-local
+      await expect(
+        validateUrlForSSRF("http://169.254.169.254/latest/meta-data/"),
+      ).rejects.toThrow(SSRFValidationError);
+    });
+
+    test("rejects IPv6 loopback and private addresses", async () => {
+      await expect(validateUrlForSSRF("http://[::1]/file")).rejects.toThrow(
+        SSRFValidationError,
+      );
+      await expect(
+        validateUrlForSSRF("http://[::ffff:127.0.0.1]/file"),
+      ).rejects.toThrow(SSRFValidationError);
+      await expect(validateUrlForSSRF("http://[fe80::1]/file")).rejects.toThrow(
+        SSRFValidationError,
+      );
+      await expect(validateUrlForSSRF("http://[fc00::1]/file")).rejects.toThrow(
+        SSRFValidationError,
+      );
+    });
+
+    test("rejects suspicious hostnames", async () => {
+      await expect(
+        validateUrlForSSRF("https://internal.local/file"),
+      ).rejects.toThrow(SSRFValidationError);
+      await expect(
+        validateUrlForSSRF("https://test.local/file"),
+      ).rejects.toThrow(SSRFValidationError);
+      await expect(
+        validateUrlForSSRF("https://corp.localdomain/file"),
+      ).rejects.toThrow(SSRFValidationError);
+      await expect(
+        validateUrlForSSRF("https://example.test/file"),
+      ).rejects.toThrow(SSRFValidationError);
+    });
+
+    test("rejects non-HTTP/HTTPS protocols", async () => {
+      await expect(validateUrlForSSRF("file:///etc/passwd")).rejects.toThrow(
+        SSRFValidationError,
+      );
+      await expect(
+        validateUrlForSSRF("ftp://example.com/file"),
+      ).rejects.toThrow(SSRFValidationError);
+      await expect(
+        validateUrlForSSRF("gopher://example.com/file"),
+      ).rejects.toThrow(SSRFValidationError);
+      await expect(
+        validateUrlForSSRF("dict://example.com/file"),
+      ).rejects.toThrow(SSRFValidationError);
+    });
+
+    test("rejects HTTP when requireHttps is true", async () => {
+      await expect(
+        validateUrlForSSRF("http://example.com/file", { requireHttps: true }),
+      ).rejects.toThrow(SSRFValidationError);
+    });
+
+    test("allows HTTP when requireHttps is false", async () => {
+      const url = await validateUrlForSSRF("http://example.com/file", {
+        requireHttps: false,
+        strictWhitelist: false,
+      });
+      expect(url.toString()).toBe("http://example.com/file");
+    });
+
+    test("with strict whitelist: rejects untrusted domains", async () => {
+      await expect(
+        validateUrlForSSRF("https://example.com/file", {
+          strictWhitelist: true,
+        }),
+      ).rejects.toThrow(SSRFValidationError);
+    });
+
+    test("with strict whitelist: allows trusted storage domains", async () => {
+      const url1 = await validateUrlForSSRF(
+        "https://public.blob.vercel-storage.com/file",
+      );
+      expect(url1.toString()).toBe(
+        "https://public.blob.vercel-storage.com/file",
+      );
+
+      const url2 = await validateUrlForSSRF(
+        "https://storage.googleapis.com/bucket/file",
+      );
+      expect(url2.toString()).toBe(
+        "https://storage.googleapis.com/bucket/file",
+      );
+
+      const url3 = await validateUrlForSSRF("https://www.notion.so/page");
+      expect(url3.toString()).toBe("https://www.notion.so/page");
+    });
+
+    test("with custom allowed domains", async () => {
+      const url = await validateUrlForSSRF("https://example.com/file", {
+        strictWhitelist: true,
+        allowedDomains: ["example.com", "*.trusted-domain.com"],
+      });
+      expect(url.toString()).toBe("https://example.com/file");
+    });
+
+    test("allows public IP addresses", async () => {
+      const url = await validateUrlForSSRF("https://1.1.1.1/file", {
+        strictWhitelist: false,
+      });
+      expect(url.toString()).toBe("https://1.1.1.1/file");
+    });
+
+    test("handles invalid URL format", async () => {
+      await expect(validateUrlForSSRF("not-a-url")).rejects.toThrow(
+        SSRFValidationError,
+      );
+    });
+  });
+
+  describe("fetchWithSSRFProtection", () => {
+    const mockFetch = vi.fn();
+
+    beforeEach(() => {
+      mockFetch.mockClear();
+      // @ts-ignore - Mock global fetch
+      global.fetch = mockFetch;
+    });
+
+    afterEach(() => {
+      // @ts-ignore - Restore global fetch
+      global.fetch = undefined;
+    });
+
+    test("validates URL before fetching", async () => {
+      await expect(
+        fetchWithSSRFProtection("http://127.0.0.1/file"),
+      ).rejects.toThrow(SSRFValidationError);
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
+
+    test("returns fetch response for valid URL", async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        status: 200,
+        headers: new Headers(),
+        arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
+      });
+
+      const response = await fetchWithSSRFProtection(
+        "https://public.blob.vercel-storage.com/file",
+        { strictWhitelist: true },
+      );
+
+      expect(response.ok).toBe(true);
+      expect(mockFetch).toHaveBeenCalledWith(
+        "https://public.blob.vercel-storage.com/file",
+        expect.objectContaining({ redirect: "manual" }),
+      );
+    });
+
+    test("prevents redirect to private IP", async () => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 302,
+        headers: new Headers({ Location: "http://127.0.0.1/exploit" }),
+      });
+
+      await expect(
+        fetchWithSSRFProtection("https://public.blob.vercel-storage.com/file", {
+          strictWhitelist: true,
+        }),
+      ).rejects.toThrow(SSRFValidationError);
+    });
+
+    test("follows redirects to trusted domains", async () => {
+      // First call returns redirect, second call returns final response
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 302,
+          headers: new Headers({
+            Location: "https://cdn.vercel-storage.com/redirected-file",
+          }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          status: 200,
+          headers: new Headers(),
+          arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
+        });
+
+      const response = await fetchWithSSRFProtection(
+        "https://public.blob.vercel-storage.com/file",
+        { strictWhitelist: true },
+      );
+
+      expect(response.ok).toBe(true);
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+    });
+
+    test("rejects too many redirects", async () => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 302,
+        headers: new Headers({ Location: "https://example.com/next" }),
+      });
+
+      await expect(
+        fetchWithSSRFProtection("https://public.blob.vercel-storage.com/file", {
+          strictWhitelist: true,
+          allowedDomains: ["*.example.com"],
+          maxRedirects: 3,
+        }),
+      ).rejects.toThrow(SSRFValidationError);
+    });
+
+    test("returns non-2xx responses as-is", async () => {
+      mockFetch.mockResolvedValue({
+        ok: false,
+        status: 404,
+        headers: new Headers(),
+      });
+
+      const response = await fetchWithSSRFProtection(
+        "https://public.blob.vercel-storage.com/file",
+        { strictWhitelist: true },
+      );
+
+      expect(response.status).toBe(404);
+    });
+  });
+});

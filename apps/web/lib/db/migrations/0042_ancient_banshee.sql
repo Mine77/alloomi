@@ -1,0 +1,1 @@
+ALTER TABLE "user_contacts" ADD COLUMN "contact_meta" jsonb DEFAULT 'null'::jsonb;

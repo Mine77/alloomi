@@ -1,0 +1,1 @@
+ALTER TABLE "Insight" ADD COLUMN "is_unreplied" boolean DEFAULT false;

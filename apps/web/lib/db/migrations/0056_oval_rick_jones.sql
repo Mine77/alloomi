@@ -1,0 +1,1 @@
+ALTER TABLE "Insight" ADD COLUMN "is_archived" boolean DEFAULT false;

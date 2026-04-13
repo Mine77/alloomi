@@ -1,0 +1,1135 @@
+/**
+ * Job Executor
+ * Executes custom scheduled jobs using the agent
+ */
+
+import type {
+  JobConfig,
+  JobExecutionResult,
+  JobExecutionContext,
+} from "./types";
+import { createClaudeAgent } from "@/lib/extensions";
+import {
+  prepareConversationWindows,
+  triggerCompactionAsync,
+  type CompactionPlatform,
+} from "@/lib/ai";
+import { preprocessCompactionMessages } from "@alloomi/agent";
+import {
+  saveChat,
+  saveMessages,
+  getMessageById,
+  updateMessageFileMetadata,
+  saveChatInsights,
+  replaceMessagesWithCompactionSummary,
+  getUserCategories,
+} from "@/lib/db/queries";
+import { db } from "../db/index";
+import { characters, insight, message as messageTable } from "../db/schema";
+import { desc, eq } from "drizzle-orm";
+import { generateUUID } from "@/lib/utils";
+import { platform, homedir } from "node:os";
+import { join } from "node:path";
+import { DEFAULT_JOB_TIMEOUT_MS } from "../config/constants";
+import { APP_DIR_NAME } from "../config/constants";
+import { DEFAULT_AI_MODEL } from "@/lib/env/constants";
+import { buildCategoriesPrompt } from "@/lib/ai/subagents/insights";
+import { getDefaultCategoryTemplates } from "@/lib/config/default-categories";
+
+const MAX_JOB_HISTORY_TOKENS = 100_000;
+const JOB_HISTORY_LIMIT = 100;
+
+// Registry for custom job handlers
+export const customJobHandlers: Record<
+  string,
+  (context: JobExecutionContext) => Promise<JobExecutionResult>
+> = {};
+
+/**
+ * Register a custom job handler
+ */
+export function registerCustomHandler(
+  name: string,
+  handler: (context: JobExecutionContext) => Promise<JobExecutionResult>,
+) {
+  customJobHandlers[name] = handler;
+}
+
+function extractTextFromParts(parts: any): string {
+  if (!Array.isArray(parts)) return "";
+  return parts
+    .filter((p) => p?.type === "text" && typeof p?.text === "string")
+    .map((p) => p.text)
+    .join("\n")
+    .trim();
+}
+
+function normalizeRole(role: unknown): "user" | "assistant" {
+  return role === "user" ? "user" : "assistant";
+}
+
+function stringifyToolPayload(value: unknown): string {
+  if (typeof value === "string") {
+    return value;
+  }
+  if (value === null || value === undefined) {
+    return "";
+  }
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return String(value);
+  }
+}
+
+function buildToolUseContent(part: Record<string, unknown>): string {
+  const toolName =
+    typeof part.toolName === "string" && part.toolName.trim().length > 0
+      ? part.toolName
+      : "UnknownTool";
+  const toolInput = stringifyToolPayload(part.toolInput);
+
+  return toolInput
+    ? `[TOOL_USE] ${toolName}\n${toolInput}`
+    : `[TOOL_USE] ${toolName}`;
+}
+
+function buildToolResultContent(part: Record<string, unknown>): string {
+  const toolName =
+    typeof part.toolName === "string" && part.toolName.trim().length > 0
+      ? part.toolName
+      : "UnknownTool";
+  const status =
+    typeof part.status === "string" && part.status.trim().length > 0
+      ? part.status
+      : "completed";
+  const toolOutput = stringifyToolPayload(part.toolOutput);
+  const errorLine = part.isError === true ? "\n[ERROR]" : "";
+
+  return toolOutput
+    ? `[TOOL_RESULT] ${toolName} (${status})${errorLine}\n${toolOutput}`
+    : `[TOOL_RESULT] ${toolName} (${status})${errorLine}`;
+}
+
+type JobHistoryMessage = {
+  id: string;
+  sourceMessageId: string;
+  role: "user" | "assistant";
+  content: string;
+  messageType: "message" | "tool_use" | "tool_result";
+  timestamp?: number;
+};
+
+function isCompactionSummaryMetadata(metadata: unknown): boolean {
+  if (!metadata || typeof metadata !== "object") {
+    return false;
+  }
+  return (metadata as Record<string, unknown>).type === "compaction_summary";
+}
+
+function extractCompactionMessagesFromParts(row: any): JobHistoryMessage[] {
+  // Scheduler chats persist assistant output as mixed "parts", so we expand a
+  // single DB row into message/tool_use/tool_result items before preprocessing.
+  const parts = Array.isArray(row.parts) ? row.parts : [];
+  const role = normalizeRole(row.role);
+  const timestamp = row.createdAt
+    ? new Date(row.createdAt).getTime()
+    : undefined;
+  const sourceMessageId = String(row.id);
+  const messages: JobHistoryMessage[] = [];
+
+  parts.forEach((part: any, index: number) => {
+    if (part?.type === "text" && typeof part.text === "string") {
+      const content = part.text.trim();
+      if (!content) return;
+      messages.push({
+        id: `${sourceMessageId}:text:${index}`,
+        sourceMessageId,
+        role,
+        content,
+        messageType: "message",
+        timestamp,
+      });
+      return;
+    }
+
+    if (part?.type === "tool-native" && role === "assistant") {
+      const toolPart = part as Record<string, unknown>;
+
+      if (toolPart.toolName || toolPart.toolInput) {
+        messages.push({
+          id: `${sourceMessageId}:tool_use:${index}`,
+          sourceMessageId,
+          role,
+          content: buildToolUseContent(toolPart),
+          messageType: "tool_use",
+          timestamp,
+        });
+      }
+
+      if (
+        toolPart.toolOutput !== undefined ||
+        toolPart.isError === true ||
+        typeof toolPart.status === "string"
+      ) {
+        messages.push({
+          id: `${sourceMessageId}:tool_result:${index}`,
+          sourceMessageId,
+          role,
+          content: buildToolResultContent(toolPart),
+          messageType: "tool_result",
+          timestamp,
+        });
+      }
+    }
+  });
+
+  if (messages.length > 0) {
+    return messages;
+  }
+
+  const fallbackContent = extractTextFromParts(row.parts);
+  if (!fallbackContent) {
+    return [];
+  }
+
+  return [
+    {
+      id: `${sourceMessageId}:fallback:0`,
+      sourceMessageId,
+      role,
+      content: fallbackContent,
+      messageType: "message",
+      timestamp,
+    },
+  ];
+}
+
+function compareJobHistoryMessages(
+  a: Pick<JobHistoryMessage, "timestamp" | "sourceMessageId" | "id">,
+  b: Pick<JobHistoryMessage, "timestamp" | "sourceMessageId" | "id">,
+): number {
+  const timestampDiff = (a.timestamp ?? 0) - (b.timestamp ?? 0);
+  if (timestampDiff !== 0) {
+    return timestampDiff;
+  }
+
+  const sourceDiff = a.sourceMessageId.localeCompare(b.sourceMessageId);
+  if (sourceDiff !== 0) {
+    return sourceDiff;
+  }
+
+  return a.id.localeCompare(b.id);
+}
+
+/**
+ * Execute a job based on its configuration
+ */
+export async function executeJob(
+  context: JobExecutionContext,
+  jobConfigStr: string,
+  jobDescription?: string,
+  isTauri?: boolean,
+): Promise<JobExecutionResult> {
+  const startTime = Date.now();
+
+  try {
+    // Parse job configuration
+    const jobConfig: JobConfig = JSON.parse(jobConfigStr);
+    console.log("[JobExecutor] Executing job:", {
+      jobId: context.jobId,
+      type: jobConfig.type,
+      config: jobConfig,
+      description: jobDescription,
+      isTauri,
+    });
+
+    // Only custom type is supported
+    const result = await executeCustomJob(
+      context,
+      jobConfig,
+      jobDescription,
+      isTauri,
+    );
+
+    result.duration = Date.now() - startTime;
+    return result;
+  } catch (error) {
+    return {
+      status: "error",
+      error: error instanceof Error ? error.message : String(error),
+      duration: Date.now() - startTime,
+    };
+  }
+}
+
+/**
+ * Execute a custom job
+ * For custom jobs, we use the agent chat API to execute the task
+ */
+async function executeCustomJob(
+  context: JobExecutionContext,
+  config: Extract<JobConfig, { type: "custom" }>,
+  jobDescription?: string,
+  isTauri?: boolean,
+): Promise<JobExecutionResult> {
+  // Phase 1.1: Check Character status before executing
+  let char: (typeof characters.$inferSelect & Record<string, unknown>) | null =
+    null;
+  let charSources: Array<{ type: string; name: string; id?: string }> = [];
+  let charTopics: string[] = [];
+  if (context.characterId) {
+    [char] = await db
+      .select()
+      .from(characters)
+      .where(eq(characters.id, context.characterId))
+      .limit(1);
+
+    // Parse sources (stored as JSON string in DB)
+    if (char?.sources) {
+      charSources =
+        typeof char.sources === "string"
+          ? JSON.parse(char.sources)
+          : Array.isArray(char.sources)
+            ? char.sources
+            : [];
+    }
+
+    // Parse topics (stored as JSON string in DB)
+    if (char?.topics) {
+      charTopics =
+        typeof char.topics === "string"
+          ? JSON.parse(char.topics)
+          : Array.isArray(char.topics)
+            ? char.topics
+            : [];
+    }
+
+    if (char && char.status !== "active") {
+      console.log(
+        `[JobExecutor] Character ${context.characterId} is "${char.status}", skipping execution`,
+      );
+      return {
+        status: "success",
+        output: "Skipped: character is paused",
+        duration: 0,
+      };
+    }
+
+    // Phase 1.3: Auto-create missing insight
+    if (char) {
+      const [existingInsight] = await db
+        .select()
+        .from(insight)
+        .where(eq(insight.id, char.insightId))
+        .limit(1);
+
+      if (!existingInsight) {
+        console.log(
+          `[JobExecutor] Bound insight ${char.insightId} not found for character ${context.characterId}, recreating...`,
+        );
+        const now = new Date();
+        await db.insert(insight).values({
+          id: char.insightId,
+          botId: char.jobId,
+          taskLabel: "Character Execution",
+          title: `Character Insight: ${char.name}`,
+          description: char.description ?? "",
+          importance: "medium",
+          urgency: "medium",
+          time: now,
+        });
+      }
+    }
+  }
+
+  // Build topics prompt if character has topics
+  let topicsPrompt = "";
+  if (char && charTopics.length > 0) {
+    try {
+      // Fetch user categories from DB
+      const userCategories = await getUserCategories(context.userId);
+      // Get template categories
+      const templateCategories = getDefaultCategoryTemplates();
+
+      // Build a map of category name -> description
+      const categoryMap = new Map<string, string | null>();
+
+      // Add user categories
+      for (const cat of userCategories) {
+        if (cat.description) {
+          categoryMap.set(cat.name, cat.description);
+        }
+      }
+
+      // Add template categories (only if not already present from user categories)
+      for (const template of templateCategories) {
+        if (!categoryMap.has(template.name) && template.description) {
+          categoryMap.set(template.name, template.description);
+        }
+      }
+
+      // Build categories list for topics
+      const matchedCategories = charTopics
+        .map((topicName) => ({
+          name: topicName,
+          description: categoryMap.get(topicName) ?? null,
+        }))
+        .filter((cat) => cat.description); // Only include topics with descriptions
+
+      if (matchedCategories.length > 0) {
+        topicsPrompt = buildCategoriesPrompt(matchedCategories);
+      }
+    } catch (error) {
+      console.error("[JobExecutor] Failed to build topics prompt:", error);
+    }
+  }
+
+  // Build character context section for the system prompt
+  const characterContextSection = char
+    ? `
+
+**CHARACTER CONTEXT (CRITICAL):**
+- characterName: ${char.name}
+- insightId: ${char.insightId}
+${charSources.length > 0 ? `- Monitored Sources:\n${charSources.map((s) => `  - [${s.type}] ${s.name}`).join("\n")}` : "- Monitored Sources: none"}
+- description: ${char.description || "none"}
+${char.soul ? `- Your personality/instructions:\n${char.soul}` : ""}
+${topicsPrompt ? `\n\n${topicsPrompt}` : ""}
+
+**BOUND INSIGHT UPDATE RULE (CRITICAL - ALWAYS FOLLOW):**
+You MUST update the bound insight's timeline after completing your task:
+1. Use modifyInsight (insightId: "${char.insightId}") to add a timeline event
+2. The timeline event MUST include:
+   - **summary**: Be specific — describe exactly what happened, what data changed, what trends emerged
+   - **tags**: Relevant categorization tags for this update
+   - **action**: Recommended next step for user (e.g., "Review competitor update", "Share with team", "Schedule follow-up"). If no specific action is needed, set to "None"
+3. NEVER skip this step - the bound insight tracks the execution history of this character`
+    : "";
+
+  try {
+    // Prepare the message from job description
+    // The job description should contain the full message/task to execute
+    const messageText: string =
+      jobDescription || config.soul || config.handler || "";
+
+    // Use jobId as chatId - all executions of the same job share the same chat
+    // This allows the agent to maintain context across executions
+    const chatId = context.jobId;
+
+    // Use model config from context (passed from frontend) or from job config
+    // This allows using local API endpoint (/api/ai/v1/messages)
+    // Priority: context.modelConfig > config.modelConfig
+    // If neither has a model, extract it from config.modelConfig.model
+    const rawModelConfig = context.modelConfig || config.modelConfig;
+    const modelConfig =
+      rawModelConfig?.model !== undefined
+        ? rawModelConfig
+        : {
+            ...rawModelConfig,
+            model:
+              (config as any).modelConfig?.model ||
+              process.env.LLM_MODEL ||
+              DEFAULT_AI_MODEL,
+          };
+
+    const agent = createClaudeAgent({
+      provider: "claude",
+      ...modelConfig,
+    });
+
+    // Extract authToken for business-tools MCP server (used for embeddings API)
+    const authToken = modelConfig?.apiKey;
+
+    // Track insight IDs created/modified during this execution for chat association
+    const createdInsightIds: string[] = [];
+    const onInsightChange = (data: {
+      action: "create" | "update" | "delete";
+      insightId?: string;
+      insight?: Record<string, unknown>;
+    }) => {
+      if (
+        (data.action === "create" || data.action === "update") &&
+        data.insightId &&
+        !createdInsightIds.includes(data.insightId)
+      ) {
+        createdInsightIds.push(data.insightId);
+      }
+    };
+
+    const sessionId = chatId; // Use jobId as sessionId
+    const messages: Array<{ role: "user" | "assistant"; content: string }> = [];
+
+    // Determine platform for system notifications
+    const osPlatform = platform();
+    const isMacOS = osPlatform === "darwin";
+    const isLinux = osPlatform === "linux";
+    const isWindows = osPlatform === "win32";
+
+    let platformNotificationSection = "";
+    let platformNotificationWorkflow = "";
+    let platformNotificationExamples = "";
+    let platformNotificationName = "";
+
+    if (isMacOS) {
+      platformNotificationName = "macOS";
+      platformNotificationSection = `**macOS Notification (ALWAYS send if no platform specified):**
+- dialog: osascript -e 'display dialog "Notification content" buttons {"OK"} default button 1 with title "Alloomi Reminder"'
+- notification: osascript -e 'display notification "Notification content" with title "Alloomi Reminder"'`;
+      platformNotificationWorkflow =
+        "5. macOS notification - ALWAYS send system notification on macOS (use osascript BOTH commands)";
+      platformNotificationExamples = `- Task: "Remind me to attend meeting at 9 AM every day" (no platform specified)
+  - Platforms: ALL available platforms + macOS notification
+  - Reminder: "Time for meeting!"
+
+- Task: "Remind me to submit weekly report every Friday" (no platform specified)
+  - Platforms: ALL available platforms + macOS notification
+  - Reminder: "Time to submit weekly report!"`;
+    } else if (isLinux) {
+      platformNotificationName = "Linux";
+      platformNotificationSection = `**Linux Notification (ALWAYS send if no platform specified):**
+- Use the Bash tool to send system notification: notify-send "Alloomi Reminder" "Notification content"
+- Alternative: zenity --info --text="Notification content" --title="Alloomi Reminder"`;
+      platformNotificationWorkflow =
+        "5. Linux notification - ALWAYS send system notification on Linux (use notify-send)";
+      platformNotificationExamples = `- Task: "Remind me to attend meeting at 9 AM every day" (no platform specified)
+  - Platforms: ALL available platforms + Linux notification
+  - Reminder: "Time for meeting!"
+
+- Task: "Remind me to submit weekly report every Friday" (no platform specified)
+  - Platforms: ALL available platforms + Linux notification
+  - Reminder: "Time to submit weekly report!"`;
+    } else if (isWindows) {
+      platformNotificationName = "Windows";
+      platformNotificationSection = `**Windows Notification (ALWAYS send if no platform specified):**
+- Use PowerShell: powershell -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.MessageBox]::Show('Notification content', 'Alloomi Reminder')"`;
+      platformNotificationWorkflow =
+        "5. Windows notification - ALWAYS send system notification on Windows (use PowerShell)";
+      platformNotificationExamples = `- Task: "Remind me to attend meeting at 9 AM every day" (no platform specified)
+  - Platforms: ALL available platforms + Windows notification
+  - Reminder: "Time for meeting!"
+
+- Task: "Remind me to submit weekly report every Friday" (no platform specified)
+  - Platforms: ALL available platforms + Windows notification
+  - Reminder: "Time to submit weekly report!"`;
+    } else {
+      platformNotificationName = "your system";
+      platformNotificationSection = `**System Notification:**
+Current platform (${osPlatform}) system notification is not configured. Only send to connected platforms.`;
+      platformNotificationWorkflow =
+        "5. System notification - send to connected platforms only";
+      platformNotificationExamples = `- Task: "Remind me to attend meeting at 9 AM every day" (no platform specified)
+  - Platforms: ALL available platforms
+  - Reminder: "Time for meeting!"`;
+    }
+
+    // Add system prompt as first assistant message to guide behavior
+    messages.push({
+      role: "assistant",
+      content: `**SCHEDULED REMINDER TASK**
+
+You are executing a scheduled reminder task on **${platformNotificationName} (${osPlatform})**.
+
+**TASK DESCRIPTION:**
+"${jobDescription}"
+
+**YOUR JOB:**
+Parse the task description and send a reminder to the USER (yourself).
+
+**REMINDER RULES:**
+- Send the reminder to the USER (the person who created this task), NOT to other contacts
+- The reminder message should be SHORT and FRIENDLY (e.g., "Time to drink water!", "Time to rest!")
+- DO NOT send the task description itself as the message
+
+**INSIGHT/EVENT/TRACK UPDATE RULES (CRITICAL):**
+When the task description mentions or is associated with a specific insight, event, or track:
+- If the task says things like "update my [X] tracking", "add to [X]", "log to [X] insight", etc.
+- The user has explicitly associated this scheduled task with an existing insight/event/track
+- **ALWAYS use modifyInsight (with the correct insightId) to UPDATE the existing insight/event/track**
+- **DO NOT create a new insight using createInsight**
+- The insightId may be provided in the task description, or you should query the user's insights to find the matching one
+- When adding timeline updates, be specific in the summary — describe exactly what happened, what data changed, what trends emerged
+- Add **tags** for categorization and **action** for next steps (e.g., "Review competitor update", "Schedule follow-up", "Share with team")
+
+**PLATFORM SELECTION:**
+1. First, use queryIntegrations to check which platforms the user has connected
+2. If the task specifies a platform (e.g., "Remind me on Telegram"), only use that platform
+3. If no platform is specified, send the reminder to ALL connected platforms PLUS system notification:
+   - Telegram, WhatsApp, Slack, Discord, Email, etc. (via sendReply)
+   - System notification (${platformNotificationName})
+
+**EXECUTION WORKFLOW:**
+1. queryIntegrations - Check which platforms are available
+2. Determine target platforms based on task description:
+   - If platform specified (e.g., "Telegram reminder") -> use that platform only
+   - If no platform specified -> use ALL available platforms + system notification
+3. Determine recipient for each platform:
+   - **For Telegram: Use "me" directly as the contact identifier** - "me" refers to your own Telegram account and will always work without needing to look up contacts
+   - For other platforms: Find the user's own contact via queryContacts (the recipient is the user themselves)
+4. sendReply - Send the reminder message to the user via each target platform using the determined recipient
+5. If the task description references an existing insight/event/track -> use modifyInsight to update it
+${platformNotificationWorkflow}
+
+${platformNotificationSection}
+
+**EXAMPLES:**
+- Task: "Remind me to drink water at 8 PM every day on Telegram"
+  - Platforms: Telegram only (specified)
+  - Contact: Use "me" as the contact identifier
+  - Reminder: "Time to drink water!"
+
+- Task: "Every day at 9 PM, update my 'Gym Progress' tracking with today's workout"
+  - The user has associated this task with the "Gym Progress" insight
+  - Action: Use modifyInsight to add a timeline event to the existing "Gym Progress" insight
+  - DO NOT create a new insight
+
+- Task: "Log my daily reading to 'Book Tracker' every evening"
+  - The user has associated this task with the "Book Tracker" insight
+  - Action: Use modifyInsight to add a timeline event to the existing "Book Tracker" insight
+
+${platformNotificationExamples}
+
+**IMPORTANT:**
+- Recipient is always the USER (yourself), not other people
+- Send a short, actionable reminder message, NOT the task description
+- If the task is associated with a specific insight/event/track, ALWAYS update the existing one - never create a new insight${characterContextSection}`,
+    });
+
+    console.log(
+      "[JobExecutor] Starting native agent execution with sessionId:",
+      chatId,
+    );
+
+    let output = "";
+    let hasError = false;
+    let errorMessage = "";
+
+    try {
+      // Get job name for chat title
+      const { getJob } = await import("@/lib/cron/service");
+      const job = await getJob(context.userId, context.jobId);
+
+      // Get user settings (including aiSoulPrompt and language)
+      const { getUserInsightSettings } = await import("@/lib/db/queries");
+      const userSettings = context.userId
+        ? await getUserInsightSettings(context.userId)
+        : null;
+
+      // Pull the newest rows first to keep the history query bounded, then
+      // restore chronological order before windowing/compaction.
+      const historyRowsDescRaw = await db
+        .select()
+        .from(messageTable)
+        .where(eq(messageTable.chatId, chatId))
+        .orderBy(desc(messageTable.createdAt))
+        .limit(JOB_HISTORY_LIMIT);
+      const historyRows = [...historyRowsDescRaw]
+        .map((row: any) => {
+          let parts = row.parts;
+          if (typeof parts === "string") {
+            try {
+              parts = JSON.parse(parts);
+            } catch {
+              parts = [];
+            }
+          }
+
+          let metadata = row.metadata;
+          if (typeof metadata === "string") {
+            try {
+              metadata = JSON.parse(metadata);
+            } catch {
+              metadata = null;
+            }
+          }
+
+          return {
+            ...row,
+            parts,
+            metadata,
+          };
+        })
+        .reverse();
+      const compactionSummarySourceMessageIds = new Set(
+        historyRows
+          .filter((row: any) => isCompactionSummaryMetadata(row.metadata))
+          .map((row: any) => String(row.id)),
+      );
+      const historyConversation: JobHistoryMessage[] = historyRows.flatMap(
+        (row: any) => extractCompactionMessagesFromParts(row),
+      );
+
+      const preparedHistory = prepareConversationWindows(historyConversation, {
+        maxTokens: MAX_JOB_HISTORY_TOKENS,
+      });
+
+      const compactionCandidates =
+        preparedHistory.candidatesForCompaction as Array<
+          JobHistoryMessage & {
+            tokens: number;
+            bucket: string;
+            ageMs: number;
+          }
+        >;
+      const immediateHistory = preparedHistory.immediate as Array<
+        JobHistoryMessage & {
+          tokens: number;
+          bucket: string;
+          ageMs: number;
+        }
+      >;
+
+      // Existing compaction summaries should stay visible to the agent but must
+      // never be fed back into a second compaction pass.
+      const protectedFromCompaction = compactionCandidates.filter((message) =>
+        compactionSummarySourceMessageIds.has(message.sourceMessageId),
+      );
+      const compactionCandidatePool = compactionCandidates.filter(
+        (message) =>
+          !compactionSummarySourceMessageIds.has(message.sourceMessageId),
+      );
+
+      const immediateSourceIds = new Set(
+        immediateHistory.map((message) => message.sourceMessageId),
+      );
+      // A single stored DB message can expand into multiple synthetic history
+      // items, so keep partially-overlapping rows on the immediate side to
+      // avoid deleting only half of a persisted message.
+      const overlappingSourceMessageIds = new Set(
+        compactionCandidatePool
+          .filter((message) => immediateSourceIds.has(message.sourceMessageId))
+          .map((message) => message.sourceMessageId),
+      );
+      const safeCompactionCandidates = compactionCandidatePool.filter(
+        (message) => !overlappingSourceMessageIds.has(message.sourceMessageId),
+      );
+      const safeImmediateHistory = [
+        ...immediateHistory,
+        ...protectedFromCompaction,
+        ...compactionCandidatePool.filter((message) =>
+          overlappingSourceMessageIds.has(message.sourceMessageId),
+        ),
+      ].sort(compareJobHistoryMessages);
+
+      if (
+        safeCompactionCandidates.length > 10 &&
+        preparedHistory.level &&
+        authToken
+      ) {
+        const preprocessedCandidates = preprocessCompactionMessages(
+          safeCompactionCandidates.map(({ role, content, messageType }) => ({
+            role,
+            type: messageType,
+            content,
+          })),
+        );
+
+        if (preprocessedCandidates.flattened.length > 0) {
+          void triggerCompactionAsync({
+            messages: preprocessedCandidates.flattened.map(
+              ({ role, content }) => ({
+                role,
+                content,
+              }),
+            ),
+            level: preparedHistory.level,
+            platform: "scheduler" as CompactionPlatform,
+            authToken,
+            persistSummary: async (result) => {
+              const candidateTimestamps = safeCompactionCandidates
+                .map((message) => message.timestamp)
+                .filter(
+                  (timestamp): timestamp is number => timestamp !== undefined,
+                );
+              const createdAt =
+                candidateTimestamps.length > 0
+                  ? new Date(Math.max(...candidateTimestamps))
+                  : new Date();
+              const rangeStart =
+                candidateTimestamps.length > 0
+                  ? new Date(Math.min(...candidateTimestamps))
+                      .toISOString()
+                      .slice(0, 10)
+                  : new Date().toISOString().slice(0, 10);
+              const rangeEnd =
+                candidateTimestamps.length > 0
+                  ? new Date(Math.max(...candidateTimestamps))
+                      .toISOString()
+                      .slice(0, 10)
+                  : new Date().toISOString().slice(0, 10);
+
+              await replaceMessagesWithCompactionSummary({
+                chatId,
+                messageIds: [
+                  ...new Set(
+                    safeCompactionCandidates.map(
+                      ({ sourceMessageId }) => sourceMessageId,
+                    ),
+                  ),
+                ],
+                summary: result.summary,
+                createdAt,
+                compactedMessageCount: result.messageCount,
+                compactedRangeStart: rangeStart,
+                compactedRangeEnd: rangeEnd,
+                level: result.level,
+              });
+            },
+          }).catch((error) => {
+            console.error("[JobExecutor] Async compaction failed:", error);
+          });
+        }
+      }
+
+      const preprocessedHistory = preprocessCompactionMessages(
+        safeImmediateHistory.map(({ role, content, messageType }) => ({
+          role,
+          type: messageType,
+          content,
+        })),
+      );
+
+      const runtimeConversation: Array<{
+        role: "user" | "assistant";
+        content: string;
+      }> = [
+        ...preprocessedHistory.flattened.map(({ role, content }) => ({
+          role: normalizeRole(role),
+          content,
+        })),
+        ...messages,
+      ];
+
+      // Save chat to database
+      try {
+        await saveChat({
+          id: chatId,
+          userId: context.userId,
+          title: `Scheduled Job: ${job?.name || context.jobId.slice(0, 8)}`,
+        });
+      } catch (error) {
+        // Ignore UNIQUE constraint error - chat may already exist
+        if (
+          (error as Error).message &&
+          !(error as Error).message.includes("UNIQUE")
+        ) {
+          console.error("[JobExecutor] Failed to save chat:", error);
+        }
+      }
+
+      // Save user message
+      const userMessageId = generateUUID();
+      await saveMessages({
+        messages: [
+          {
+            chatId,
+            id: userMessageId,
+            role: "user",
+            parts: [{ type: "text", text: messageText }],
+            attachments: [],
+            createdAt: new Date(),
+            metadata: undefined,
+          },
+        ],
+      });
+
+      // Run the agent with timeout
+      // Use bypassPermissions mode - same as normal execution
+      const generator = agent.run(messageText, {
+        sessionId,
+        taskId: chatId, // Pass chatId as taskId to ensure workspace files are stored at ~/.alloomi/sessions/{chatId}/
+        conversation: runtimeConversation,
+        permissionMode: "bypassPermissions", // Full permissions for scheduled tasks
+        session: {
+          user: { id: context.userId, type: "pro" },
+          expires: new Date(Date.now() + 3600000), // 1 hour
+        } as any,
+        authToken, // Pass auth token for business-tools MCP server (embeddings API)
+        onInsightChange, // Track created insights for chat association
+        skillsConfig: {
+          enabled: true,
+          userDirEnabled: true,
+          appDirEnabled: false,
+        },
+        aiSoulPrompt: config.soul
+          ? `${config.soul}\n\n${userSettings?.aiSoulPrompt ?? ""}`
+          : (userSettings?.aiSoulPrompt ?? null),
+        language: userSettings?.language ?? null,
+        onPermissionRequest: async (request) => {
+          // Disable create scheduled task tools to prevent recursive creation of scheduled tasks
+          if (request.toolName === "createScheduledJob") {
+            return {
+              behavior: "deny",
+              message:
+                "Creating scheduled tasks is temporarily disabled during scheduled job execution",
+            };
+          }
+          return { behavior: "allow" };
+        },
+      });
+
+      // Track messages for real-time saving and final output
+      const assistantMessages: Array<{ id: string; content: string }> = [];
+      const timeout = DEFAULT_JOB_TIMEOUT_MS;
+      const startTime = Date.now();
+      let toolCallCount = 0;
+      const maxToolCalls = 200; // Prevent infinite loops
+
+      // Current assistant message being built - like chat-context.tsx
+      // All tool calls and text are accumulated in parts array of a single message
+      let currentMessageId = generateUUID();
+      let currentParts: Array<any> = [];
+      let hasSavedCurrentMessage = false;
+
+      // Save the current assistant message with all accumulated parts
+      const saveCurrentAssistantMessage = async () => {
+        if (currentParts.length > 0) {
+          await saveMessages({
+            messages: [
+              {
+                chatId,
+                id: currentMessageId,
+                role: "assistant",
+                parts: currentParts,
+                attachments: [],
+                createdAt: new Date(),
+                metadata: undefined,
+              },
+            ],
+          });
+          // Extract text content for output (only once)
+          if (!hasSavedCurrentMessage) {
+            const textPart = currentParts.find((p) => p.type === "text");
+            if (textPart) {
+              assistantMessages.push({
+                id: currentMessageId,
+                content: textPart.text,
+              });
+            }
+            hasSavedCurrentMessage = true;
+          }
+        }
+      };
+
+      // Reset for next assistant message
+      const resetCurrentMessage = () => {
+        currentMessageId = generateUUID();
+        currentParts = [];
+        hasSavedCurrentMessage = false;
+      };
+
+      for await (const message of generator) {
+        // Check timeout
+        if (Date.now() - startTime > timeout) {
+          console.error("[JobExecutor] Agent execution timeout");
+          hasError = true;
+          errorMessage = "Agent execution timeout (1200 minutes)";
+          break;
+        }
+
+        // Check tool call count
+        if (message.type === "tool_use") {
+          toolCallCount++;
+          if (toolCallCount > maxToolCalls) {
+            console.error("[JobExecutor] Too many tool calls:", toolCallCount);
+            hasError = true;
+            errorMessage = `Too many tool calls (${maxToolCalls})`;
+            break;
+          }
+        }
+
+        if (message.type === "text") {
+          // Add text to current parts
+          const textContent = message.content || "";
+          output += textContent;
+
+          // Find existing text part or create new one
+          const existingTextIndex = currentParts.findIndex(
+            (p) => p.type === "text",
+          );
+          if (existingTextIndex >= 0) {
+            // Append to existing text part
+            currentParts[existingTextIndex].text += textContent;
+          } else {
+            // Add new text part
+            currentParts.push({ type: "text", text: textContent });
+          }
+
+          // Save message immediately when we get text content (like chat-context)
+          await saveCurrentAssistantMessage();
+        } else if (message.type === "tool_use") {
+          // Don't save here - let tool calls accumulate in the same message
+          // Only save when we have text content that user needs to see
+
+          // Skip if no message id
+          if (!message.id) {
+            console.log("[JobExecutor] Skipping tool_use - no message id");
+          } else {
+            // Add tool call to current parts (same message)
+            currentParts.push({
+              type: "tool-native",
+              toolName: message.name || "",
+              toolUseId: message.id,
+              toolInput: message.input,
+              status: "executing",
+            });
+
+            // Save immediately
+            await saveCurrentAssistantMessage();
+          }
+
+          // Don't reset here - let multiple tool calls accumulate in same message
+          // Only reset when starting a new assistant message (on text or explicit reset)
+        } else if (message.type === "tool_result") {
+          // Update the corresponding tool call part with result
+          // This updates the in-memory currentParts, then saves
+
+          // Skip if no tool use id
+          if (!message.toolUseId) {
+            console.log("[JobExecutor] Skipping tool_result - no tool use id");
+          } else {
+            // Find and update the tool-native part in currentParts
+            let found = false;
+            currentParts = currentParts.map((part) => {
+              if (
+                part.type === "tool-native" &&
+                part.toolUseId === message.toolUseId
+              ) {
+                found = true;
+                return {
+                  ...part,
+                  status: message.isError ? "error" : "completed",
+                  toolOutput: message.output,
+                  isError: message.isError,
+                };
+              }
+              return part;
+            });
+
+            if (found) {
+              // Save the updated message
+              await saveCurrentAssistantMessage();
+            } else {
+              // Tool result came for a tool that was saved in a previous message
+              // Need to update the previous message in DB
+              console.log(
+                "[JobExecutor] Tool result for previous message, updating DB:",
+                {
+                  toolUseId: message.toolUseId,
+                  currentMessageId,
+                },
+              );
+
+              try {
+                // Use currentMessageId to query the message, not toolUseId
+                const existingMessages = await getMessageById({
+                  id: currentMessageId,
+                });
+                const existingMessage = existingMessages?.[0];
+
+                if (
+                  existingMessage?.parts &&
+                  Array.isArray(existingMessage.parts)
+                ) {
+                  const updatedParts = existingMessage.parts.map(
+                    (part: any) => {
+                      if (
+                        part.type === "tool-native" &&
+                        part.toolUseId === message.toolUseId
+                      ) {
+                        return {
+                          ...part,
+                          status: message.isError ? "error" : "completed",
+                          toolOutput: message.output,
+                          isError: message.isError,
+                        };
+                      }
+                      return part;
+                    },
+                  );
+
+                  await updateMessageFileMetadata({
+                    messageId: currentMessageId,
+                    attachments: existingMessage.attachments || [],
+                    parts: updatedParts,
+                  });
+                }
+              } catch (error) {
+                console.error(
+                  "[JobExecutor] Failed to update tool result in DB:",
+                  error,
+                );
+              }
+            }
+          }
+        } else if (message.type === "error") {
+          // Add error to current parts
+          currentParts.push({
+            type: "text",
+            text: `**Error:** ${message.message || "Unknown error"}`,
+          });
+
+          hasError = true;
+          errorMessage = message.message || "Unknown error";
+          console.error("[JobExecutor] Native agent error:", message);
+
+          // Save error message
+          await saveCurrentAssistantMessage();
+
+          // Reset for next message
+          resetCurrentMessage();
+        } else if (message.type === "done") {
+          // Save any remaining parts before done
+          await saveCurrentAssistantMessage();
+        }
+      }
+
+      // Save any remaining message
+      await saveCurrentAssistantMessage();
+
+      // Associate created insights with the job's chat
+      if (createdInsightIds.length > 0) {
+        try {
+          await saveChatInsights({
+            chatId,
+            insightIds: createdInsightIds,
+          });
+          console.log(
+            `[JobExecutor] Associated ${createdInsightIds.length} insight(s) with chat ${chatId}: ${createdInsightIds.join(", ")}`,
+          );
+        } catch (error) {
+          console.error("[JobExecutor] Failed to save chat insights:", error);
+        }
+      }
+    } catch (error) {
+      console.error("[JobExecutor] Native agent execution failed:", error);
+      hasError = true;
+      errorMessage = error instanceof Error ? error.message : String(error);
+    }
+
+    // Compute session directory path (same logic as agent's getSessionWorkDir with taskId)
+    const sessionDir = join(homedir(), APP_DIR_NAME, "sessions", chatId);
+
+    const jobResult: JobExecutionResult = {
+      status: (hasError ? "error" : "success") as "error" | "success",
+      output: output || "Task completed",
+      error: hasError ? errorMessage : undefined,
+      result: {
+        chatId,
+        message: messageText,
+        executionId: context.executionId,
+        sessionDir,
+      },
+      duration: 0,
+    };
+
+    return jobResult;
+  } catch (error) {
+    console.error("[JobExecutor] Custom job error:", error);
+    return {
+      status: "error",
+      error: error instanceof Error ? error.message : String(error),
+      duration: 0,
+    };
+  }
+}

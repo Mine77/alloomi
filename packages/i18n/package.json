@@ -1,0 +1,18 @@
+{
+  "name": "@alloomi/i18n",
+  "version": "0.4.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./locales/en-US": "./src/locales/en-US.ts",
+    "./locales/zh-Hans": "./src/locales/zh-Hans.ts"
+  },
+  "devDependencies": {
+    "@alloomi/config": "workspace:*",
+    "typescript": "^5.6.3"
+  },
+  "scripts": {
+    "build": "echo no build needed"
+  }
+}

@@ -1,0 +1,2 @@
+DROP INDEX IF EXISTS "platform_accounts_external_id_idx";--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "platform_accounts_user_platform_external_id_idx" ON "platform_accounts" USING btree ("userId","platform","external_id");

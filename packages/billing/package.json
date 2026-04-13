@@ -1,0 +1,23 @@
+{
+  "name": "@alloomi/billing",
+  "version": "0.4.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./stripe": "./src/stripe.ts",
+    "./credits": "./src/credits.ts",
+    "./subscription": "./src/subscription.ts"
+  },
+  "dependencies": {
+    "stripe": "^19.1.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@alloomi/config": "workspace:*",
+    "typescript": "^5.6.3"
+  },
+  "scripts": {
+    "build": "echo no build needed"
+  }
+}

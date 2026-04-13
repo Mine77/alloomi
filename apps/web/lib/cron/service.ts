@@ -1,0 +1,551 @@
+/**
+ * Scheduled Jobs Service
+ * Manages cron jobs in the database
+ * Compatible with both PostgreSQL (web) and SQLite (Tauri) modes
+ */
+
+import { eq, and, desc, asc, lt, isNull, or, sql } from "drizzle-orm";
+import { db } from "../db/index";
+import {
+  scheduledJobs,
+  jobExecutions,
+  type InsertScheduledJob,
+  type InsertJobExecution,
+} from "../db/schema";
+import type {
+  ScheduleConfig,
+  JobConfig,
+  JobExecutionResult,
+  JobExecutionContext,
+} from "./types";
+import { computeNextRun } from "./scheduler";
+import { deserializeJson, serializeJson } from "../db/queries";
+import { DEFAULT_JOB_TIMEOUT_MS } from "../config/constants";
+
+/**
+ * List all jobs for a user
+ */
+export async function listJobs(
+  userId: string,
+  opts: {
+    includeDisabled?: boolean;
+    view?: "all" | "active" | "executed";
+  } = {},
+) {
+  const baseConditions = opts.includeDisabled
+    ? eq(scheduledJobs.userId, userId)
+    : and(eq(scheduledJobs.userId, userId), eq(scheduledJobs.enabled, true));
+
+  let viewConditions = undefined;
+  if (opts.view === "active") {
+    // Active: recurring jobs (cron/interval) OR one-time jobs not yet in terminal state
+    viewConditions = or(
+      eq(scheduledJobs.scheduleType, "cron"),
+      eq(scheduledJobs.scheduleType, "interval"),
+      or(
+        isNull(scheduledJobs.lastStatus),
+        eq(scheduledJobs.lastStatus, "running"),
+      ),
+    );
+  } else if (opts.view === "executed") {
+    // Executed: one-time jobs with a terminal lastStatus (success/error), excluding running
+    viewConditions = and(
+      eq(scheduledJobs.scheduleType, "once"),
+      or(
+        eq(scheduledJobs.lastStatus, "success"),
+        eq(scheduledJobs.lastStatus, "error"),
+      ),
+    );
+  }
+  // "all": no additional filter
+
+  const conditions = viewConditions
+    ? and(baseConditions, viewConditions)
+    : baseConditions;
+
+  const jobs = await db
+    .select()
+    .from(scheduledJobs)
+    .where(conditions)
+    .orderBy(asc(scheduledJobs.nextRunAt));
+
+  return jobs;
+}
+
+/**
+ * Get a single job by ID
+ */
+export async function getJob(userId: string, jobId: string) {
+  const jobs = await db
+    .select()
+    .from(scheduledJobs)
+    .where(and(eq(scheduledJobs.userId, userId), eq(scheduledJobs.id, jobId)))
+    .limit(1);
+
+  if (!jobs[0]) return null;
+
+  const job = jobs[0];
+  // Deserialize jobConfig JSON string (needed for SQLite/Tauri mode)
+  if (typeof job.jobConfig === "string") {
+    (job as any).jobConfig = deserializeJson(job.jobConfig);
+  }
+  return job;
+}
+
+/**
+ * Create a new scheduled job
+ */
+export async function createJob(
+  userId: string,
+  input: {
+    name: string;
+    description?: string;
+    schedule: ScheduleConfig;
+    job: JobConfig;
+    enabled?: boolean;
+    timezone?: string;
+  },
+) {
+  const now = new Date();
+  const nextRun = computeNextRun(input.schedule, now);
+
+  const jobData: InsertScheduledJob = {
+    id: crypto.randomUUID(),
+    userId,
+    name: input.name,
+    description: input.description ?? null,
+    scheduleType: input.schedule.type,
+    cronExpression:
+      input.schedule.type === "cron" ? input.schedule.expression : null,
+    intervalMinutes:
+      input.schedule.type === "interval" ? input.schedule.minutes : null,
+    scheduledAt:
+      input.schedule.type === "once"
+        ? input.schedule.at instanceof Date
+          ? input.schedule.at
+          : new Date(input.schedule.at as string)
+        : null,
+    jobType: input.job.type,
+    jobConfig: serializeJson(input.job) as unknown as Record<string, unknown>,
+    enabled: input.enabled ?? true,
+    timezone: input.timezone || "UTC",
+    nextRunAt: nextRun,
+    createdAt: now,
+    updatedAt: now,
+    runCount: 0,
+    failureCount: 0,
+  };
+
+  const [job] = await db.insert(scheduledJobs).values(jobData).returning();
+  return job;
+}
+
+/**
+ * Update an existing job
+ */
+export async function updateJob(
+  userId: string,
+  jobId: string,
+  updates: Partial<{
+    name: string;
+    description: string;
+    schedule: ScheduleConfig;
+    job: JobConfig;
+    enabled: boolean;
+    timezone: string;
+  }>,
+) {
+  const job = await getJob(userId, jobId);
+  if (!job) {
+    throw new Error("Job not found");
+  }
+
+  const updateData: Partial<InsertScheduledJob> = {
+    updatedAt: new Date(),
+  };
+
+  if (updates.name !== undefined) updateData.name = updates.name;
+  if (updates.description !== undefined)
+    updateData.description = updates.description;
+  if (updates.enabled !== undefined) updateData.enabled = updates.enabled;
+  if (updates.timezone !== undefined) updateData.timezone = updates.timezone;
+
+  if (updates.schedule) {
+    updateData.scheduleType = updates.schedule.type;
+    if (updates.schedule.type === "cron") {
+      updateData.cronExpression = updates.schedule.expression;
+      updateData.intervalMinutes = null; // Clear old interval value when switching to cron
+    } else if (updates.schedule.type === "interval") {
+      updateData.intervalMinutes = updates.schedule.minutes;
+      updateData.cronExpression = null; // Clear old cron expression when switching to interval
+      updateData.scheduledAt = null; // Clear old once time when switching to interval
+    } else if (updates.schedule.type === "once") {
+      // Handle both Date object and string (from JSON serialization)
+      const atValue = updates.schedule.at;
+      updateData.scheduledAt =
+        atValue instanceof Date ? atValue : new Date(atValue as string);
+      updateData.intervalMinutes = null; // Clear old interval value when switching to once
+      updateData.cronExpression = null; // Clear old cron expression when switching to once
+    }
+
+    // Recompute next run time
+    const nextRun = computeNextRun(updates.schedule, new Date());
+    updateData.nextRunAt = nextRun;
+  }
+
+  if (updates.job) {
+    updateData.jobConfig = serializeJson(updates.job) as unknown as Record<
+      string,
+      unknown
+    >;
+    updateData.jobType = updates.job.type;
+  }
+
+  const [updated] = await db
+    .update(scheduledJobs)
+    .set(updateData)
+    .where(and(eq(scheduledJobs.userId, userId), eq(scheduledJobs.id, jobId)))
+    .returning();
+
+  return updated;
+}
+
+/**
+ * Delete a job
+ */
+export async function deleteJob(userId: string, jobId: string) {
+  await db
+    .delete(scheduledJobs)
+    .where(and(eq(scheduledJobs.userId, userId), eq(scheduledJobs.id, jobId)));
+}
+
+/**
+ * Enable/disable a job
+ */
+export async function toggleJob(
+  userId: string,
+  jobId: string,
+  enabled: boolean,
+) {
+  const updateData: Partial<InsertScheduledJob> = {
+    enabled,
+    updatedAt: new Date(),
+  };
+
+  if (enabled) {
+    // Recompute next run when enabling
+    const job = await getJob(userId, jobId);
+    if (job) {
+      let schedule: ScheduleConfig;
+
+      if (job.scheduleType === "cron") {
+        const expression = job.cronExpression;
+        if (!expression) {
+          throw new Error("Cron expression is required for cron jobs");
+        }
+        schedule = {
+          type: "cron",
+          expression,
+          timezone: job.timezone,
+        };
+      } else if (job.scheduleType === "interval") {
+        const minutes = job.intervalMinutes;
+        if (typeof minutes !== "number") {
+          throw new Error("Interval minutes is required for interval jobs");
+        }
+        schedule = { type: "interval", minutes };
+      } else {
+        const scheduledAt = job.scheduledAt;
+        if (!scheduledAt) {
+          throw new Error("Scheduled at is required for once jobs");
+        }
+        schedule = { type: "once", at: scheduledAt };
+      }
+
+      updateData.nextRunAt = computeNextRun(schedule, new Date());
+    }
+  } else {
+    updateData.nextRunAt = null;
+  }
+
+  const [updated] = await db
+    .update(scheduledJobs)
+    .set(updateData)
+    .where(and(eq(scheduledJobs.userId, userId), eq(scheduledJobs.id, jobId)))
+    .returning();
+
+  return updated;
+}
+
+/**
+ * Get jobs due to run for a specific user
+ */
+export async function getDueJobs(now: Date = new Date(), userId?: string) {
+  const conditions = userId
+    ? and(eq(scheduledJobs.enabled, true), eq(scheduledJobs.userId, userId))
+    : eq(scheduledJobs.enabled, true);
+
+  const jobs = await db
+    .select()
+    .from(scheduledJobs)
+    .where(conditions)
+    .orderBy(asc(scheduledJobs.nextRunAt));
+
+  return jobs.filter(
+    (job: { nextRunAt: Date | null; lastStatus: string | null }) =>
+      job.nextRunAt && job.nextRunAt <= now && job.lastStatus !== "running", // Exclude jobs that are already running
+  );
+}
+
+/**
+ * Record job execution start
+ */
+export async function startJobExecution(context: JobExecutionContext) {
+  const executionData: InsertJobExecution = {
+    id: context.executionId, // Use the executionId from context instead of generating new one
+    jobId: context.jobId,
+    status: "running", // Will be updated to success/error on completion
+    startedAt: new Date(),
+    triggeredBy: context.triggeredBy,
+  };
+
+  const [execution] = await db
+    .insert(jobExecutions)
+    .values(executionData)
+    .returning();
+
+  // Get job info to check if it's a one-time job
+  const jobs = await db
+    .select()
+    .from(scheduledJobs)
+    .where(eq(scheduledJobs.id, context.jobId))
+    .limit(1);
+
+  const updateData: {
+    lastRunAt: Date;
+    lastStatus: "running";
+    nextRunAt?: Date | null;
+  } = {
+    lastRunAt: new Date(),
+    lastStatus: "running",
+  };
+
+  // For one-time jobs, immediately set nextRunAt to null to prevent re-execution
+  if (jobs[0]?.scheduleType === "once") {
+    updateData.nextRunAt = null;
+  }
+
+  // Update job state
+  await db
+    .update(scheduledJobs)
+    .set(updateData)
+    .where(eq(scheduledJobs.id, context.jobId));
+
+  return execution;
+}
+
+/**
+ * Record job execution completion
+ */
+export async function completeJobExecution(
+  context: JobExecutionContext,
+  result: JobExecutionResult,
+) {
+  const completedAt = new Date();
+
+  // Log result for debugging
+  console.log("[completeJobExecution] Saving execution result:", {
+    executionId: context.executionId,
+    status: result.status,
+    resultObject: result.result,
+    hasChatId: !!result.result?.chatId,
+    chatId: result.result?.chatId,
+  });
+
+  await db
+    .update(jobExecutions)
+    .set({
+      status: result.status,
+      completedAt,
+      durationMs: result.duration,
+      output: result.output,
+      error: result.error,
+      result: result.result ? JSON.stringify(result.result) : null,
+    })
+    .where(eq(jobExecutions.id, context.executionId));
+
+  // Update job state
+  const job = await db
+    .select()
+    .from(scheduledJobs)
+    .where(eq(scheduledJobs.id, context.jobId))
+    .limit(1);
+  if (job[0]) {
+    const nextRun = job[0].nextRunAt;
+    let newNextRun = nextRun;
+
+    // Compute next run if this is a recurring job
+    if (job[0].scheduleType === "cron" && job[0].cronExpression) {
+      const expression = job[0].cronExpression;
+      if (expression) {
+        const schedule: ScheduleConfig = {
+          type: "cron",
+          expression,
+          timezone: job[0].timezone,
+        };
+        newNextRun = computeNextRun(schedule, completedAt);
+      }
+    } else if (job[0].scheduleType === "interval" && job[0].intervalMinutes) {
+      const minutes = job[0].intervalMinutes;
+      if (typeof minutes === "number") {
+        const schedule: ScheduleConfig = {
+          type: "interval",
+          minutes,
+        };
+        newNextRun = computeNextRun(schedule, completedAt);
+      }
+    } else if (job[0].scheduleType === "once") {
+      // One-time jobs should not run again
+      newNextRun = null;
+    }
+
+    await db
+      .update(scheduledJobs)
+      .set({
+        lastStatus: result.status,
+        lastError: result.error,
+        nextRunAt: newNextRun,
+        runCount: (job[0].runCount || 0) + 1,
+        failureCount:
+          result.status === "error"
+            ? (job[0].failureCount || 0) + 1
+            : job[0].failureCount || 0,
+        updatedAt: completedAt,
+      })
+      .where(eq(scheduledJobs.id, context.jobId));
+  }
+}
+
+/**
+ * Get execution history for a job
+ */
+export async function getJobExecutions(
+  jobId: string,
+  options?: { limit?: number; offset?: number },
+) {
+  const { limit = 10, offset = 0 } = options ?? {};
+  const [executions, [{ count }]] = await Promise.all([
+    db
+      .select()
+      .from(jobExecutions)
+      .where(eq(jobExecutions.jobId, jobId))
+      .orderBy(desc(jobExecutions.startedAt))
+      .limit(limit)
+      .offset(offset),
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(jobExecutions)
+      .where(eq(jobExecutions.jobId, jobId)),
+  ]);
+  return { executions, total: count };
+}
+
+/**
+ * Recovery timeout in milliseconds
+ * Jobs running longer than this are considered stuck
+ * Uses the same timeout as job execution (DEFAULT_JOB_TIMEOUT_MS)
+ */
+const RECOVERY_TIMEOUT_MS = DEFAULT_JOB_TIMEOUT_MS;
+
+/**
+ * Recover stuck jobs that were left in "running" state due to app crash or unexpected shutdown
+ * This should be called on app startup
+ */
+export async function recoverStuckJobs(): Promise<number> {
+  const now = new Date();
+  const timeoutThreshold = new Date(now.getTime() - RECOVERY_TIMEOUT_MS);
+
+  // Find running executions that started before the timeout threshold
+  const stuckExecutions = await db
+    .select()
+    .from(jobExecutions)
+    .where(
+      and(
+        eq(jobExecutions.status, "running"),
+        lt(jobExecutions.startedAt, timeoutThreshold),
+      ),
+    );
+
+  if (stuckExecutions.length === 0) {
+    console.log("[CronService] No stuck jobs to recover");
+    return 0;
+  }
+
+  console.log(
+    `[CronService] Found ${stuckExecutions.length} stuck jobs to recover`,
+  );
+
+  let recoveredCount = 0;
+
+  for (const execution of stuckExecutions) {
+    // Mark execution as failed
+    await db
+      .update(jobExecutions)
+      .set({
+        status: "error",
+        completedAt: now,
+        error: "Job was interrupted due to app shutdown or crash (recovered)",
+      })
+      .where(eq(jobExecutions.id, execution.id));
+
+    // Update job status
+    const jobs = await db
+      .select()
+      .from(scheduledJobs)
+      .where(eq(scheduledJobs.id, execution.jobId))
+      .limit(1);
+
+    if (jobs[0]) {
+      // Recalculate next run for recurring jobs
+      let newNextRun = jobs[0].nextRunAt;
+
+      if (jobs[0].scheduleType === "cron" && jobs[0].cronExpression) {
+        const schedule = {
+          type: "cron" as const,
+          expression: jobs[0].cronExpression,
+          timezone: jobs[0].timezone,
+        };
+        newNextRun = computeNextRun(schedule, now);
+      } else if (
+        jobs[0].scheduleType === "interval" &&
+        jobs[0].intervalMinutes
+      ) {
+        const schedule = {
+          type: "interval" as const,
+          minutes: jobs[0].intervalMinutes,
+        };
+        newNextRun = computeNextRun(schedule, now);
+      }
+
+      await db
+        .update(scheduledJobs)
+        .set({
+          lastStatus: "error",
+          lastError:
+            "Job was interrupted due to app shutdown or crash (recovered)",
+          nextRunAt: newNextRun,
+          failureCount: (jobs[0].failureCount || 0) + 1,
+          updatedAt: now,
+        })
+        .where(eq(scheduledJobs.id, execution.jobId));
+
+      console.log(
+        `[CronService] Recovered job: ${jobs[0].name} (ID: ${execution.jobId})`,
+      );
+      recoveredCount++;
+    }
+  }
+
+  console.log(`[CronService] Recovered ${recoveredCount} stuck jobs`);
+  return recoveredCount;
+}

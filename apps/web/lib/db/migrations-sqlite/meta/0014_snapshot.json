@@ -1,0 +1,6 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "id": "0014-add-presentation-tables",
+  "prevId": "0013-fix-user-meta-tables"
+}

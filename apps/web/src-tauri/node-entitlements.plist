@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Disable sandbox to allow TCC permission inheritance -->
+    <key>com.apple.security.app-sandbox</key>
+    <false/>
+    <!-- Apple Event automation permission (required for iMessage integration) -->
+    <key>com.apple.security.automation.apple-events</key>
+    <true/>
+    <!-- Full disk access permission -->
+    <key>com.apple.security.files.all</key>
+    <true/>
+    <!-- Allow execution of arbitrary code (subprocesses / external commands) -->
+    <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+    <true/>
+    <!-- Allow JIT compilation (required by Node.js / V8) -->
+    <key>com.apple.security.cs.allow-jit</key>
+    <true/>
+    <!-- Disable library validation (required for Node.js module loading) -->
+    <key>com.apple.security.cs.disable-library-validation</key>
+    <true/>
+    <!-- Allow arbitrary executable loading (required to run external commands like gh) -->
+    <key>com.apple.security.cs.disable-executable-stack-protection</key>
+    <true/>
+    <!-- Allow inherited permissions (inherit TCC permissions from parent process) -->
+    <key>com.apple.security.inherit</key>
+    <true/>
+    <!-- Network access permission -->
+    <key>com.apple.security.network.client</key>
+    <true/>
+    <key>com.apple.security.network.server</key>
+    <true/>
+</dict>
+</plist>

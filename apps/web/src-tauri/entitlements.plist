@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- DISABLE SANDBOX - Critical for Node.js subprocess to inherit TCC permissions on macOS 15 -->
+    <key>com.apple.security.app-sandbox</key>
+    <false/>
+    <!-- Allow JIT compilation for Node.js/V8 -->
+    <key>com.apple.security.cs.allow-jit</key>
+    <true/>
+    <!-- Allow arbitrary load (needed for Node.js modules) -->
+    <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+    <true/>
+    <!-- Disable library validation -->
+    <key>com.apple.security.cs.disable-library-validation</key>
+    <true/>
+    <!-- Disable execution restrictions -->
+    <key>com.apple.security.cs.disable-executable-stack-protection</key>
+    <true/>
+    <!-- Network access (for API calls and integrations) -->
+    <key>com.apple.security.network.client</key>
+    <true/>
+    <key>com.apple.security.network.server</key>
+    <true/>
+    <!-- File system access (for virtual file system) -->
+    <key>com.apple.security.files.user-selected.read-write</key>
+    <true/>
+    <!-- Full Disk Access (for iMessage database access) -->
+    <key>com.apple.security.automation.apple-events</key>
+    <true/>
+    <key>com.apple.security.files.all</key>
+    <true/>
+    <!-- Inherit entitlements from parent process -->
+    <key>com.apple.security.inherit</key>
+    <true/>
+</dict>
+</plist>

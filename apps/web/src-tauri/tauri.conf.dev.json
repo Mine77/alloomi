@@ -1,0 +1,58 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Alloomi",
+  "version": "0.4.0",
+  "identifier": "com.alloomi.app",
+  "build": {
+    "beforeDevCommand": "node scripts/run-tauri-dev.js",
+    "devUrl": "http://localhost:3415"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "title": "Alloomi",
+        "width": 1280,
+        "height": 800,
+        "minWidth": 450,
+        "minHeight": 600,
+        "dragDropEnabled": false,
+        "url": "http://localhost:3415"
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "category": "Productivity",
+    "shortDescription": "Alloomi AI Assistant",
+    "longDescription": "Alloomi AI Assistant - Your Personal Productivity Tool. Integrate all your messaging platforms and get AI-powered insights.",
+    "macOS": {
+      "frameworks": [],
+      "minimumSystemVersion": "10.13",
+      "entitlements": "entitlements.plist",
+      "providerShortName": null,
+      "signingIdentity": null
+    },
+    "resources": [
+      "../../../skills/**/*",
+      "../cli-bundle/**/*"
+    ]
+  },
+  "plugins": {
+    "shell": {
+      "open": true
+    },
+    "fs": {}
+  }
+}

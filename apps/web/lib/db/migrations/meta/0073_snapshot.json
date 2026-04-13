@@ -1,0 +1,644 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "id": "0073_add_missing_tables",
+  "prevId": "0072_easy_bill_hollister",
+  "name": "0073_add_missing_tables",
+  "formatter": "pg",
+  "statements": [
+    {
+      "type": "create_table",
+      "tableName": "whatsapp_accounts",
+      "schema": "",
+      "data": {
+        "tableName": "whatsapp_accounts",
+        "schema": "",
+        "columns": [
+          {
+            "name": "id",
+            "type": "uuid",
+            "primaryKey": true,
+            "notNull": true,
+            "default": "gen_random_uuid()"
+          },
+          {
+            "name": "user_id",
+            "type": "uuid",
+            "primaryKey": false,
+            "notNull": true,
+            "default": null
+          },
+          {
+            "name": "whatsapp_user_id",
+            "type": "text",
+            "primaryKey": false,
+            "notNull": true,
+            "default": null
+          },
+          {
+            "name": "username",
+            "type": "text",
+            "primaryKey": false,
+            "notNull": false,
+            "default": null
+          },
+          {
+            "name": "push_name",
+            "type": "text",
+            "primaryKey": false,
+            "notNull": false,
+            "default": null
+          },
+          {
+            "name": "linked_at",
+            "type": "timestamp with time zone",
+            "primaryKey": false,
+            "notNull": true,
+            "default": "now()"
+          },
+          {
+            "name": "updated_at",
+            "type": "timestamp with time zone",
+            "primaryKey": false,
+            "notNull": true,
+            "default": "now()"
+          },
+          {
+            "name": "last_command_at",
+            "type": "timestamp with time zone",
+            "primaryKey": false,
+            "notNull": false,
+            "default": null
+          }
+        ],
+        "indexes": [
+          {
+            "name": "whatsapp_accounts_whatsapp_user_idx",
+            "columns": ["whatsapp_user_id"],
+            "isUnique": true
+          },
+          {
+            "name": "whatsapp_accounts_user_and_whatsapp_idx",
+            "columns": ["user_id", "whatsapp_user_id"],
+            "isUnique": true
+          },
+          {
+            "name": "whatsapp_accounts_user_idx",
+            "columns": ["user_id"],
+            "isUnique": false
+          }
+        ],
+        "foreignKeys": [
+          {
+            "name": "whatsapp_accounts_user_id_User_id_fk",
+            "columns": ["user_id"],
+            "referencedColumns": ["id"],
+            "referencedTableName": "User"
+          }
+        ],
+        "compositePrimaryKeys": []
+      }
+    },
+    {
+      "type": "create_table",
+      "tableName": "insight_processing_failures",
+      "schema": "",
+      "data": {
+        "tableName": "insight_processing_failures",
+        "schema": "",
+        "columns": [
+          {
+            "name": "id",
+            "type": "uuid",
+            "primaryKey": true,
+            "notNull": true,
+            "default": "gen_random_uuid()"
+          },
+          {
+            "name": "bot_id",
+            "type": "uuid",
+            "primaryKey": false,
+            "notNull": true,
+            "default": null
+          },
+          {
+            "name": "group_name",
+            "type": "text",
+            "primaryKey": false,
+            "notNull": true,
+            "default": null
+          },
+          {
+            "name": "failure_count",
+            "type": "integer",
+            "primaryKey": false,
+            "notNull": true,
+            "default": "1"
+          },
+          {
+            "name": "status",
+            "type": "varchar(16)",
+            "primaryKey": false,
+            "notNull": true,
+            "default": "'pending'"
+          },
+          {
+            "name": "last_error",
+            "type": "text",
+            "primaryKey": false,
+            "notNull": false,
+            "default": null
+          },
+          {
+            "name": "last_attempted_at",
+            "type": "timestamp with time zone",
+            "primaryKey": false,
+            "notNull": true,
+            "default": "now()"
+          },
+          {
+            "name": "processed_since",
+            "type": "integer",
+            "primaryKey": false,
+            "notNull": true,
+            "default": null
+          },
+          {
+            "name": "created_at",
+            "type": "timestamp with time zone",
+            "primaryKey": false,
+            "notNull": true,
+            "default": "now()"
+          },
+          {
+            "name": "updated_at",
+            "type": "timestamp with time zone",
+            "primaryKey": false,
+            "notNull": true,
+            "default": "now()"
+          }
+        ],
+        "indexes": [
+          {
+            "name": "insight_failures_bot_group_idx",
+            "columns": ["bot_id", "group_name"],
+            "isUnique": true
+          },
+          {
+            "name": "insight_failures_bot_status_idx",
+            "columns": ["bot_id", "status"],
+            "isUnique": false
+          },
+          {
+            "name": "insight_failures_attempted_idx",
+            "columns": ["last_attempted_at"],
+            "isUnique": false
+          }
+        ],
+        "foreignKeys": [
+          {
+            "name": "insight_processing_failures_bot_id_Bot_id_fk",
+            "columns": ["bot_id"],
+            "referencedColumns": ["id"],
+            "referencedTableName": "Bot"
+          }
+        ],
+        "compositePrimaryKeys": []
+      }
+    },
+    {
+      "type": "create_table",
+      "tableName": "scheduled_jobs",
+      "schema": "",
+      "data": {
+        "tableName": "scheduled_jobs",
+        "schema": "",
+        "columns": [
+          {
+            "name": "id",
+            "type": "uuid",
+            "primaryKey": true,
+            "notNull": true,
+            "default": "gen_random_uuid()"
+          },
+          {
+            "name": "user_id",
+            "type": "uuid",
+            "primaryKey": false,
+            "notNull": true,
+            "default": null
+          },
+          {
+            "name": "name",
+            "type": "varchar(255)",
+            "primaryKey": false,
+            "notNull": true,
+            "default": null
+          },
+          {
+            "name": "description",
+            "type": "text",
+            "primaryKey": false,
+            "notNull": false,
+            "default": null
+          },
+          {
+            "name": "schedule_type",
+            "type": "varchar(20)",
+            "primaryKey": false,
+            "notNull": true,
+            "default": "'cron'"
+          },
+          {
+            "name": "cron_expression",
+            "type": "varchar(100)",
+            "primaryKey": false,
+            "notNull": false,
+            "default": null
+          },
+          {
+            "name": "interval_minutes",
+            "type": "integer",
+            "primaryKey": false,
+            "notNull": false,
+            "default": null
+          },
+          {
+            "name": "scheduled_at",
+            "type": "timestamp with time zone",
+            "primaryKey": false,
+            "notNull": false,
+            "default": null
+          },
+          {
+            "name": "job_type",
+            "type": "varchar(50)",
+            "primaryKey": false,
+            "notNull": true,
+            "default": "'custom'"
+          },
+          {
+            "name": "job_config",
+            "type": "jsonb",
+            "primaryKey": false,
+            "notNull": true,
+            "default": "'{}'::jsonb"
+          },
+          {
+            "name": "enabled",
+            "type": "boolean",
+            "primaryKey": false,
+            "notNull": true,
+            "default": "true"
+          },
+          {
+            "name": "timezone",
+            "type": "varchar(50)",
+            "primaryKey": false,
+            "notNull": true,
+            "default": "'UTC'"
+          },
+          {
+            "name": "last_run_at",
+            "type": "timestamp with time zone",
+            "primaryKey": false,
+            "notNull": false,
+            "default": null
+          },
+          {
+            "name": "next_run_at",
+            "type": "timestamp with time zone",
+            "primaryKey": false,
+            "notNull": false,
+            "default": null
+          },
+          {
+            "name": "last_status",
+            "type": "varchar(20)",
+            "primaryKey": false,
+            "notNull": false,
+            "default": null
+          },
+          {
+            "name": "last_error",
+            "type": "text",
+            "primaryKey": false,
+            "notNull": false,
+            "default": null
+          },
+          {
+            "name": "run_count",
+            "type": "integer",
+            "primaryKey": false,
+            "notNull": true,
+            "default": "0"
+          },
+          {
+            "name": "failure_count",
+            "type": "integer",
+            "primaryKey": false,
+            "notNull": true,
+            "default": "0"
+          },
+          {
+            "name": "created_at",
+            "type": "timestamp with time zone",
+            "primaryKey": false,
+            "notNull": true,
+            "default": "now()"
+          },
+          {
+            "name": "updated_at",
+            "type": "timestamp with time zone",
+            "primaryKey": false,
+            "notNull": true,
+            "default": "now()"
+          }
+        ],
+        "indexes": [
+          {
+            "name": "scheduled_jobs_user_idx",
+            "columns": ["user_id"],
+            "isUnique": false
+          },
+          {
+            "name": "scheduled_jobs_enabled_idx",
+            "columns": ["enabled"],
+            "isUnique": false
+          },
+          {
+            "name": "scheduled_jobs_next_run_idx",
+            "columns": ["next_run_at"],
+            "isUnique": false
+          },
+          {
+            "name": "scheduled_jobs_user_enabled_idx",
+            "columns": ["user_id", "enabled"],
+            "isUnique": false
+          }
+        ],
+        "foreignKeys": [
+          {
+            "name": "scheduled_jobs_user_id_User_id_fk",
+            "columns": ["user_id"],
+            "referencedColumns": ["id"],
+            "referencedTableName": "User"
+          }
+        ],
+        "compositePrimaryKeys": []
+      }
+    },
+    {
+      "type": "create_table",
+      "tableName": "job_executions",
+      "schema": "",
+      "data": {
+        "tableName": "job_executions",
+        "schema": "",
+        "columns": [
+          {
+            "name": "id",
+            "type": "uuid",
+            "primaryKey": true,
+            "notNull": true,
+            "default": "gen_random_uuid()"
+          },
+          {
+            "name": "job_id",
+            "type": "uuid",
+            "primaryKey": false,
+            "notNull": true,
+            "default": null
+          },
+          {
+            "name": "status",
+            "type": "varchar(20)",
+            "primaryKey": false,
+            "notNull": true,
+            "default": null
+          },
+          {
+            "name": "started_at",
+            "type": "timestamp with time zone",
+            "primaryKey": false,
+            "notNull": true,
+            "default": "now()"
+          },
+          {
+            "name": "completed_at",
+            "type": "timestamp with time zone",
+            "primaryKey": false,
+            "notNull": false,
+            "default": null
+          },
+          {
+            "name": "duration_ms",
+            "type": "integer",
+            "primaryKey": false,
+            "notNull": false,
+            "default": null
+          },
+          {
+            "name": "result",
+            "type": "jsonb",
+            "primaryKey": false,
+            "notNull": false,
+            "default": null
+          },
+          {
+            "name": "error",
+            "type": "text",
+            "primaryKey": false,
+            "notNull": false,
+            "default": null
+          },
+          {
+            "name": "output",
+            "type": "text",
+            "primaryKey": false,
+            "notNull": false,
+            "default": null
+          },
+          {
+            "name": "triggered_by",
+            "type": "varchar(50)",
+            "primaryKey": false,
+            "notNull": true,
+            "default": "'scheduler'"
+          }
+        ],
+        "indexes": [
+          {
+            "name": "job_executions_job_idx",
+            "columns": ["job_id"],
+            "isUnique": false
+          },
+          {
+            "name": "job_executions_started_at_idx",
+            "columns": ["started_at"],
+            "isUnique": false
+          },
+          {
+            "name": "job_executions_status_idx",
+            "columns": ["status"],
+            "isUnique": false
+          }
+        ],
+        "foreignKeys": [
+          {
+            "name": "job_executions_job_id_scheduled_jobs_id_fk",
+            "columns": ["job_id"],
+            "referencedColumns": ["id"],
+            "referencedTableName": "scheduled_jobs"
+          }
+        ],
+        "compositePrimaryKeys": []
+      }
+    },
+    {
+      "type": "create_table",
+      "tableName": "insight_timeline_history",
+      "schema": "",
+      "data": {
+        "tableName": "insight_timeline_history",
+        "schema": "",
+        "columns": [
+          {
+            "name": "id",
+            "type": "uuid",
+            "primaryKey": true,
+            "notNull": true,
+            "default": "gen_random_uuid()"
+          },
+          {
+            "name": "insight_id",
+            "type": "uuid",
+            "primaryKey": false,
+            "notNull": true,
+            "default": null
+          },
+          {
+            "name": "timeline_event_id",
+            "type": "text",
+            "primaryKey": false,
+            "notNull": true,
+            "default": null
+          },
+          {
+            "name": "version",
+            "type": "integer",
+            "primaryKey": false,
+            "notNull": true,
+            "default": null
+          },
+          {
+            "name": "event_time",
+            "type": "text",
+            "primaryKey": false,
+            "notNull": false,
+            "default": null
+          },
+          {
+            "name": "summary",
+            "type": "text",
+            "primaryKey": false,
+            "notNull": true,
+            "default": null
+          },
+          {
+            "name": "label",
+            "type": "text",
+            "primaryKey": false,
+            "notNull": true,
+            "default": null
+          },
+          {
+            "name": "change_type",
+            "type": "text",
+            "primaryKey": false,
+            "notNull": true,
+            "default": null
+          },
+          {
+            "name": "change_reason",
+            "type": "text",
+            "primaryKey": false,
+            "notNull": true,
+            "default": null
+          },
+          {
+            "name": "changed_by",
+            "type": "text",
+            "primaryKey": false,
+            "notNull": true,
+            "default": "'system'"
+          },
+          {
+            "name": "previous_snapshot",
+            "type": "jsonb",
+            "primaryKey": false,
+            "notNull": false,
+            "default": null
+          },
+          {
+            "name": "diff_summary",
+            "type": "text",
+            "primaryKey": false,
+            "notNull": false,
+            "default": null
+          },
+          {
+            "name": "created_at",
+            "type": "timestamp with time zone",
+            "primaryKey": false,
+            "notNull": true,
+            "default": "now()"
+          },
+          {
+            "name": "source_message_id",
+            "type": "text",
+            "primaryKey": false,
+            "notNull": false,
+            "default": null
+          }
+        ],
+        "indexes": [
+          {
+            "name": "timeline_history_insight_idx",
+            "columns": ["insight_id"],
+            "isUnique": false
+          },
+          {
+            "name": "timeline_history_event_idx",
+            "columns": ["timeline_event_id"],
+            "isUnique": false
+          },
+          {
+            "name": "timeline_history_created_idx",
+            "columns": ["created_at"],
+            "isUnique": false
+          },
+          {
+            "name": "timeline_history_insight_event_idx",
+            "columns": ["insight_id", "timeline_event_id"],
+            "isUnique": false
+          }
+        ],
+        "foreignKeys": [
+          {
+            "name": "insight_timeline_history_insight_id_Insight_id_fk",
+            "columns": ["insight_id"],
+            "referencedColumns": ["id"],
+            "referencedTableName": "Insight"
+          }
+        ],
+        "compositePrimaryKeys": []
+      }
+    }
+  ],
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  }
+}

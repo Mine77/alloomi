@@ -1,0 +1,73 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Alloomi",
+  "version": "0.4.0",
+  "identifier": "com.alloomi.app",
+  "build": {
+    "beforeDevCommand": "node scripts/run-tauri-dev.js",
+    "beforeBuildCommand": "node scripts/run-tauri-build.js",
+    "devUrl": "http://localhost:3415"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "title": "Alloomi",
+        "width": 1280,
+        "height": 800,
+        "minWidth": 450,
+        "minHeight": 600,
+        "dragDropEnabled": false,
+        "url": "about:blank"
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self' 'unsafe-inline' 'unsafe-eval' blob: data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: data: tauri:; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: http: blob:; font-src 'self' data:; connect-src 'self' https: http: wss: blob: data: tauri: ipca:; frame-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self';",
+      "capabilities": ["default"]
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "category": "Productivity",
+    "shortDescription": "Alloomi AI Assistant",
+    "longDescription": "Alloomi AI Assistant - Your Personal Productivity Tool. Integrate all your messaging platforms and get AI-powered insights.",
+    "macOS": {
+      "frameworks": [],
+      "minimumSystemVersion": "10.13",
+      "entitlements": "entitlements.plist",
+      "providerShortName": null,
+      "signingIdentity": null
+    },
+    "resources": [
+      "../../../skills/**/*",
+      "../cli-bundle/**/*",
+      "../.next/standalone/**/*",
+      "../.next/standalone/apps/web/.next/**/*",
+      "../.next/standalone/apps/web/lib/**/*",
+      "../.next/standalone/apps/web/cli-bundle/**/*",
+      "../.next/standalone/apps/web/server.js",
+      "../.next/standalone/apps/web/public/**/*",
+      "../.env",
+      "resources/loading.html"
+    ],
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": ""
+    }
+  },
+  "plugins": {
+    "shell": {
+      "open": true
+    },
+    "fs": {}
+  }
+}

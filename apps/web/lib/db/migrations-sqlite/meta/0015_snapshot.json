@@ -1,0 +1,6 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "id": "0082-add-session-version",
+  "prevId": "0013-fix-user-meta-tables"
+}

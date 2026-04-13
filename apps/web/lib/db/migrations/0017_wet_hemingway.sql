@@ -1,0 +1,1 @@
+ALTER TABLE "user_summary_settings" ADD COLUMN "language" text DEFAULT '' NOT NULL;

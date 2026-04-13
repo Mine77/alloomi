@@ -1,0 +1,469 @@
+/**
+ * Tauri API helper functions
+ * Used to call native functionality in Tauri environment
+ */
+
+import { invoke } from "@tauri-apps/api/core";
+
+/**
+ * Check if in Tauri environment (supports both server and client)
+ * Server environment determined by IS_TAURI environment variable
+ * Client environment checks window.__TAURI__
+ */
+export const isTauri = () => {
+  // Client: check window.__TAURI__
+  return typeof window !== "undefined" && "__TAURI__" in window;
+};
+
+/**
+ * Get data directory path
+ */
+export const getDataDirectory = async () => {
+  if (!isTauri()) {
+    return null;
+  }
+  try {
+    return await invoke<string>("get_data_directory");
+  } catch (error) {
+    console.error("Failed to get data directory:", error);
+    return null;
+  }
+};
+
+/**
+ * Get the storage data directory
+ */
+export const getStorageDirectory = async () => {
+  if (!isTauri()) {
+    return null;
+  }
+  try {
+    return await invoke<string>("get_storage_directory");
+  } catch (error) {
+    console.error("Failed to get storage directory:", error);
+    return null;
+  }
+};
+
+/**
+ * Get memory directory path
+ * Memory directory used for storing user memory files
+ */
+export const getMemoryDirectory = async () => {
+  if (!isTauri()) {
+    return null;
+  }
+  try {
+    return await invoke<string>("get_memory_directory");
+  } catch (error) {
+    console.error("Failed to get memory directory:", error);
+    return null;
+  }
+};
+
+/**
+ * Get application information
+ */
+export const getAppInfo = async () => {
+  if (!isTauri()) {
+    return null;
+  }
+  try {
+    return await invoke("get_app_info");
+  } catch (error) {
+    console.error("Failed to get app info:", error);
+    return null;
+  }
+};
+
+/**
+ * Open developer tools (only available in development mode)
+ * Note: Tauri automatically opens devtools in development mode
+ */
+export const openDevTools = async () => {
+  if (!isTauri()) {
+    return;
+  }
+  // Tauri 2.0 automatically opens devtools in development mode
+  // This feature is not available in production environment
+  console.warn("DevTools are only available in development mode");
+};
+
+/**
+ * Open URL in browser
+ */
+export const openUrl = async (url: string) => {
+  if (isTauri()) {
+    // Tauri Webview environment - use custom commands
+    try {
+      await invoke("open_url_custom", { url });
+    } catch (error) {
+      console.error("Failed to open URL with Tauri:", error);
+      window.open(url, "_blank");
+    }
+  } else if (typeof window !== "undefined") {
+    // Browser environment
+    window.open(url, "_blank");
+  } else {
+    // Node.js server environment
+    // In server, can't directly open browser
+    // Return URL for frontend to handle
+    console.warn("openUrl called in server environment, returning URL:", url);
+    return url;
+  }
+};
+
+/**
+ * Open file/path
+ */
+export const openPathCustom = async (path: string): Promise<boolean> => {
+  if (!isTauri()) {
+    return false;
+  }
+  try {
+    await invoke("open_path_custom", { path });
+    return true;
+  } catch (error) {
+    console.error("Failed to open path:", error);
+    return false;
+  }
+};
+
+/**
+ * Open folder selection dialog
+ * Returns selected folder path, returns null if user cancels
+ */
+export const pickFolderDialog = async (): Promise<string | null> => {
+  if (!isTauri()) {
+    return null;
+  }
+  try {
+    const path = await invoke<string | null>("pick_folder_dialog");
+    return path;
+  } catch (error) {
+    console.error("Failed to pick folder:", error);
+    return null;
+  }
+};
+
+/**
+ * Read file content (returns Uint8Array, for binary files)
+ */
+export const readFileBinary = async (
+  path: string,
+): Promise<Uint8Array | null> => {
+  if (!isTauri()) {
+    return null;
+  }
+  try {
+    const data = await invoke<number[]>("read_file_custom", { path });
+    return new Uint8Array(data);
+  } catch (error) {
+    console.error("Failed to read file:", error);
+    return null;
+  }
+};
+
+/**
+ * Read file content (returns string, for text files)
+ */
+export const readFile = async (path: string): Promise<string | null> => {
+  if (!isTauri()) {
+    return null;
+  }
+  try {
+    const data = await readFileBinary(path);
+    if (!data) return null;
+    const decoder = new TextDecoder("utf-8");
+    return decoder.decode(data);
+  } catch (error) {
+    console.error("Failed to read file:", error);
+    return null;
+  }
+};
+
+/**
+ * Get file metadata
+ */
+export const fileStat = async (
+  path: string,
+): Promise<{ size: number; isFile: boolean; isDir: boolean } | null> => {
+  if (!isTauri()) {
+    return null;
+  }
+  try {
+    return await invoke("file_stat_custom", { path });
+  } catch (error) {
+    console.error(`[fileStat] for ${path} Error:`, error);
+    return null;
+  }
+};
+
+/**
+ * Check if file exists
+ */
+export const fileExists = async (path: string): Promise<boolean> => {
+  if (!isTauri()) {
+    return false;
+  }
+  try {
+    return await invoke("file_exists_custom", { path });
+  } catch (error) {
+    return false;
+  }
+};
+
+/**
+ * Create directory
+ */
+export const mkdirCustom = async (dirPath: string): Promise<void> => {
+  if (!isTauri()) {
+    return;
+  }
+  try {
+    await invoke("mkdir_custom", { dirPath });
+  } catch (error) {
+    console.warn(`Failed to create directory ${dirPath}:`, error);
+  }
+};
+
+/**
+ * Write text file
+ */
+export const writeTextFileCustom = async (
+  filePath: string,
+  content: string,
+): Promise<void> => {
+  if (!isTauri()) {
+    return;
+  }
+  try {
+    await invoke("write_text_file_custom", { filePath, content });
+  } catch (error) {
+    console.error(`Failed to write file ${filePath}:`, error);
+  }
+};
+
+/**
+ * Read text file
+ */
+export const readTextFileCustom = async (
+  filePath: string,
+): Promise<string | null> => {
+  if (!isTauri()) {
+    return null;
+  }
+  try {
+    return await invoke("read_text_file_custom", { filePath });
+  } catch (error) {
+    console.error(`Failed to read file ${filePath}:`, error);
+    return null;
+  }
+};
+
+/**
+ * Delete file
+ */
+export const removeFileCustom = async (filePath: string): Promise<void> => {
+  if (!isTauri()) {
+    return;
+  }
+  try {
+    await invoke("remove_file_custom", { filePath });
+  } catch (error) {
+    console.error("Failed to remove file:", error);
+  }
+};
+
+/**
+ * Show file in file manager
+ */
+export const revealItemInDir = async (path: string): Promise<boolean> => {
+  if (!isTauri()) {
+    return false;
+  }
+  try {
+    await invoke("reveal_item_in_dir_custom", { path });
+    return true;
+  } catch (error) {
+    console.error("Failed to reveal item:", error);
+    return false;
+  }
+};
+
+/**
+ * Get home directory path
+ */
+export const homeDirCustom = async (): Promise<string | null> => {
+  if (!isTauri()) {
+    return null;
+  }
+  try {
+    return await invoke("home_dir_custom");
+  } catch (error) {
+    console.error("Failed to get home dir:", error);
+    return null;
+  }
+};
+
+/**
+ * Get platform information
+ */
+export const getPlatform = () => {
+  if (typeof window === "undefined") {
+    return "unknown";
+  }
+
+  if (isTauri()) {
+    // Tauri environment
+    return "tauri";
+  }
+
+  // Browser environment
+  return "browser";
+};
+
+// ============ Auto Update ============
+
+/**
+ * Update check result type
+ */
+export interface UpdateCheckResult {
+  has_update: boolean;
+  latest_version: string;
+  current_version: string;
+  download_url: string;
+  release_url: string;
+  file_size: number;
+}
+
+/**
+ * Check GitHub tags to determine if there's a new version
+ */
+export const checkForUpdate = async (): Promise<UpdateCheckResult | null> => {
+  if (!isTauri()) {
+    return null;
+  }
+  try {
+    return await invoke<UpdateCheckResult>("check_for_update");
+  } catch (error) {
+    console.warn("Failed to check for update:", error);
+    return null;
+  }
+};
+
+/**
+ * Auto installation result
+ */
+export interface UpdateInstallResult {
+  auto_installed: boolean;
+  message: string;
+}
+
+/**
+ * Download and auto install update
+ */
+export const downloadAndInstallUpdate = async (
+  downloadUrl: string,
+  fileSize: number,
+): Promise<UpdateInstallResult | null> => {
+  if (!isTauri()) {
+    return null;
+  }
+  try {
+    return await invoke<UpdateInstallResult>("download_and_install_update", {
+      downloadUrl,
+      fileSize,
+    });
+  } catch (error) {
+    console.error("Failed to download and install update:", error);
+    throw error;
+  }
+};
+
+/**
+ * Restart application to complete update
+ */
+export const restartForUpdate = async (): Promise<void> => {
+  if (!isTauri()) {
+    return;
+  }
+  try {
+    await invoke("restart_for_update");
+  } catch (error) {
+    console.error("Failed to restart for update:", error);
+  }
+};
+
+// ============ Server Status ============
+
+/**
+ * Server status type
+ */
+export interface ServerStatus {
+  running: boolean;
+  status: string; // "starting", "downloading", "running", "error"
+  error_message: string | null;
+  node_version: string | null;
+}
+
+/**
+ * Get server status (Tauri specific)
+ */
+export async function getServerStatus(): Promise<ServerStatus | null> {
+  if (!isTauri()) {
+    return null;
+  }
+  try {
+    return await invoke<ServerStatus>("get_server_status");
+  } catch (error) {
+    console.error("Failed to get server status:", error);
+    return null;
+  }
+}
+
+/**
+ * Restart the Next.js server (Tauri specific)
+ */
+export async function restartServer(): Promise<void> {
+  if (!isTauri()) {
+    return;
+  }
+  try {
+    await invoke("restart_server");
+  } catch (error) {
+    console.error("Failed to restart server:", error);
+    throw error;
+  }
+}
+
+/**
+ * Tauri API exports
+ */
+export const tauriApi = {
+  isTauri,
+  getDataDirectory,
+  getStorageDirectory,
+  getMemoryDirectory,
+  getAppInfo,
+  openDevTools,
+  openUrl,
+  openPathCustom,
+  readFile,
+  readFileBinary,
+  fileStat,
+  fileExists,
+  mkdirCustom,
+  writeTextFileCustom,
+  readTextFileCustom,
+  removeFileCustom,
+  revealItemInDir,
+  homeDirCustom,
+  getPlatform,
+  // Server status
+  getServerStatus,
+  restartServer,
+  checkForUpdate,
+  downloadAndInstallUpdate,
+  restartForUpdate,
+};

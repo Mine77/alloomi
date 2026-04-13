@@ -1,0 +1,57 @@
+import fs from "node:fs";
+import { execSync } from "node:child_process";
+import os from "node:os";
+import { fileURLToPath } from "node:url";
+
+const __dirname = fileURLToPath(new URL(".", import.meta.url));
+const isDarwin = os.platform() === "darwin";
+
+console.log("Starting Tauri build process...");
+
+if (isDarwin) {
+  console.log("Cleaning up residual disk mounts...");
+  try {
+    const output = execSync("hdiutil info 2>/dev/null", { encoding: "utf8" });
+    const volumes = output
+      .split("\n")
+      .map((l) => l.trim())
+      .filter((l) => l.startsWith("/Volumes/"));
+    for (const vol of volumes) {
+      const parts = vol.split(/\s+/);
+      if (parts[2]) {
+        try {
+          execSync(`hdiutil detach "${parts[2]}" 2>/dev/null`, {
+            stdio: "pipe",
+          });
+        } catch {}
+      }
+    }
+  } catch {}
+}
+
+const webDir = __dirname;
+process.chdir(webDir);
+
+console.log("Web directory:", webDir);
+console.log("Working directory:", process.cwd());
+
+console.log("Creating standalone placeholder for Cargo build...");
+const mkdir = (p) => {
+  if (!fs.existsSync(p)) fs.mkdirSync(p, { recursive: true });
+};
+mkdir(".next/standalone/apps/web/public");
+mkdir(".next/standalone/apps/web/.next");
+mkdir(".next/standalone/node_modules");
+fs.writeFileSync(".next/standalone/package.json", "{}");
+fs.writeFileSync(".next/standalone/apps/web/package.json", "{}");
+fs.writeFileSync(".next/standalone/node_modules/package.json", "{}");
+
+console.log("Bundling Claude and Node.js runtime...");
+execSync("pnpm bundle:runtime", { stdio: "inherit" });
+
+console.log("Running migrations and building Next.js...");
+execSync("IS_TAURI=true SKIP_TYPE_CHECK=true pnpm run build", {
+  stdio: "inherit",
+});
+
+console.log("Build complete!");
