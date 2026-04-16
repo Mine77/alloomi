@@ -13,7 +13,7 @@ interface PdfPreviewProps {
   path?: string;
 }
 
-interface RenderedPage {
+export interface RenderedPage {
   index: number;
   dataUrl: string;
   width: number;
