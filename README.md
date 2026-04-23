@@ -20,7 +20,7 @@ Alloomi is a **proactive AI workspace** that monitors business signals, orchestr
 - **🧠 Long-Term Memory (Context Atlas)** — persistent knowledge graphs of people, projects, and decisions; remembers context even months later
 - **🎯 95% Noise Filtering** — hundreds of daily messages refined into one focused panel; tells you what you should act on
 - **⚡ Autonomous Execution** — drafts replies, schedules meetings, generates reports, tracks and validates results end-to-end
-- **💬 Natural Chat** — assign tasks in plain language; no complex commands to learn
+- **💬 Natural Chat** — assign tasks in plain language; no complex commands to learn with powerful skills and MCP tools.
 
 ### Multi-Platform Access
 
