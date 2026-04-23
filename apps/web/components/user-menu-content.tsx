@@ -373,24 +373,6 @@ export function UserMenuContent({
             <RemixIcon name="question" size={styles.iconSize} />
             <span>{t("nav.help")}</span>
           </button>
-          <button
-            type="button"
-            onClick={async () => {
-              onMenuItemClick();
-              const { emit } = await import("@tauri-apps/api/event");
-              await emit("manual-update-check");
-            }}
-            className={cn(
-              "flex items-center w-full rounded-sm text-foreground cursor-pointer bg-transparent border-none",
-              styles.itemGap,
-              styles.itemPadding,
-              styles.itemTextSize,
-              styles.itemHover,
-            )}
-          >
-            <RemixIcon name="refresh" size={styles.iconSize} />
-            <span>{t("nav.checkForUpdates")}</span>
-          </button>
         </>
       ) : (
         <button
