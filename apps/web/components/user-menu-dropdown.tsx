@@ -4,18 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import type { Session } from "next-auth";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@alloomi/ui";
+import { DropdownMenu, DropdownMenuContent } from "@alloomi/ui";
 import { cn } from "@/lib/utils";
 import { useUserProfile } from "@/hooks/use-user-profile";
 import { UserMenuContent } from "@/components/user-menu-content";
@@ -43,16 +32,12 @@ interface UserMenuDropdownProps {
   isMobile: boolean;
   /** Language switch handler */
   onLanguageChange: (code: string) => void;
-  /** Logout handler */
-  onLogout: () => void;
   /** Login handler */
   onLogin: () => void;
   /** Mobile sidebar close callback */
   onCloseSidebar?: () => void;
   /** Open "Contact Us" dialog (accessed from menu when sidebar is collapsed) */
   onOpenContactUs?: () => void;
-  /** Open mandatory onboarding modal in development mode */
-  onOpenMandatoryOnboardingDebug?: () => void;
   /** Child elements (trigger) */
   children: React.ReactNode;
 }
@@ -72,17 +57,14 @@ export function UserMenuDropdown({
   currentLang,
   isMobile,
   onLanguageChange,
-  onLogout,
   onLogin,
   onCloseSidebar,
   onOpenContactUs,
-  onOpenMandatoryOnboardingDebug,
   children,
 }: UserMenuDropdownProps) {
   const { t } = useTranslation();
   const router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const { profile } = useUserProfile();
 
   /**
@@ -211,42 +193,13 @@ export function UserMenuDropdown({
             userDisplayName={userDisplayName}
             userAvatarUrl={userAvatarUrl}
             onLanguageChange={onLanguageChange}
-            onLogout={onLogout}
-            onRequestLogout={() => setShowLogoutConfirm(true)}
             onLogin={onLogin}
             onMenuItemClick={handleMenuItemClick}
             onOpenContactUs={onOpenContactUs}
-            onOpenMandatoryOnboardingDebug={onOpenMandatoryOnboardingDebug}
             onPersonalSettingsClick={handlePersonalSettingsClick}
           />
         </DropdownMenuContent>
       </DropdownMenu>
-
-      {/* Logout confirmation dialog — rendered outside DropdownMenu
-          to avoid z-index / portal conflicts */}
-      <AlertDialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {t("common.logoutConfirmTitle")}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("common.logoutConfirmDescription")}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => {
-                onLogout();
-              }}
-            >
-              {t("common.signOut")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }

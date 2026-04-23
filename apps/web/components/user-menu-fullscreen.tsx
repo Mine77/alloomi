@@ -1,22 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
 import type { Session } from "next-auth";
 import { RemixIcon } from "@/components/remix-icon";
-import {
-  Button,
-  ScrollArea,
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@alloomi/ui";
+import { Button, ScrollArea } from "@alloomi/ui";
 import { cn } from "@/lib/utils";
 import { useUserProfile } from "@/hooks/use-user-profile";
 import { useIsMobile } from "@alloomi/hooks/use-is-mobile";
@@ -47,16 +36,12 @@ interface UserMenuFullscreenProps {
   onClose: () => void;
   /** Language change handler */
   onLanguageChange: (code: string) => void;
-  /** Logout handler */
-  onLogout: () => void;
   /** Login handler */
   onLogin: () => void;
   /** Callback for closing sidebar on mobile */
   onCloseSidebar?: () => void;
   /** Opens the "Contact Us" dialog */
   onOpenContactUs?: () => void;
-  /** Open mandatory onboarding modal in development mode */
-  onOpenMandatoryOnboardingDebug?: () => void;
 }
 
 /**
@@ -73,17 +58,14 @@ export function UserMenuFullscreen({
   isOpen,
   onClose,
   onLanguageChange,
-  onLogout,
   onLogin,
   onCloseSidebar,
   onOpenContactUs,
-  onOpenMandatoryOnboardingDebug,
 }: UserMenuFullscreenProps) {
   const { t } = useTranslation();
   const router = useRouter();
   const isMobile = useIsMobile();
   const { profile } = useUserProfile();
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   /**
    * Get user display name (nickname).
@@ -274,43 +256,14 @@ export function UserMenuFullscreen({
               userDisplayName={userDisplayName}
               userAvatarUrl={userAvatarUrl}
               onLanguageChange={onLanguageChange}
-              onLogout={onLogout}
-              onRequestLogout={() => setShowLogoutConfirm(true)}
               onLogin={onLogin}
               onMenuItemClick={handleMenuItemClick}
               onOpenContactUs={onOpenContactUs}
-              onOpenMandatoryOnboardingDebug={onOpenMandatoryOnboardingDebug}
               onPersonalSettingsClick={handlePersonalSettingsClick}
             />
           </div>
         </ScrollArea>
       </div>
-
-      {/* Logout confirmation dialog — rendered outside fullscreen menu
-          to avoid z-index conflicts (fullscreen menu is z-[70], AlertDialog overlay is z-[60]) */}
-      <AlertDialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {t("common.logoutConfirmTitle")}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("common.logoutConfirmDescription")}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => {
-                onLogout();
-              }}
-            >
-              {t("common.signOut")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }

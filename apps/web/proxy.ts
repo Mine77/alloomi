@@ -102,6 +102,7 @@ export async function proxy(request: NextRequest) {
   // ========== Original permission logic (compatible with file-read token) ==========
   const publicPaths = new Set([
     "/login",
+    "/guest-login",
     "/register",
     "/forgot-password",
     "/reset-password",
@@ -124,6 +125,7 @@ export async function proxy(request: NextRequest) {
     "/register",
     "/forgot-password",
     "/reset-password",
+    "/guest-login",
   ]);
   // /login special handling: only redirect to home page when user actively visits
   // If it's a redirect after logout (has callbackUrl), allow access to login page
@@ -137,7 +139,7 @@ export async function proxy(request: NextRequest) {
 
   const buildLoginRedirect = () => {
     const loginUrl = request.nextUrl.clone();
-    loginUrl.pathname = "/";
+    loginUrl.pathname = "/guest-login";
     if (!loginUrl.searchParams.has("callbackUrl")) {
       const callbackTarget = `${pathname}${request.nextUrl.search}`.trim();
       loginUrl.searchParams.set(
@@ -170,7 +172,7 @@ export async function proxy(request: NextRequest) {
   const isGuest = token.type === "guest";
   const hasValidSessionVersion = token.sessionVersion === authSessionVersion;
 
-  if ((!hasValidSessionVersion || isGuest) && !isPublicPath) {
+  if (!isPublicPath && (!hasValidSessionVersion || isGuest)) {
     return buildLoginRedirect();
   }
 

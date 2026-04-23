@@ -1,6 +1,6 @@
 export const authConfig = {
   pages: {
-    signIn: "/",
+    signIn: "/guest-login",
     newUser: "/",
   },
   trustHost: true,

@@ -268,7 +268,7 @@ export function AppSidebar() {
     startTransition(() => {
       setChatId(id);
     });
-  }, [pathname]);
+  }, [pathname, router]);
 
   useEffect(() => {
     setPlan("free");
@@ -344,7 +344,6 @@ export function AppSidebar() {
       currentPage === "profile" ||
       currentPage === "profile-soul" ||
       currentPage === "alloomi-soul" ||
-      currentPage === "my-contexts" ||
       currentPage === "account-settings" ||
       currentPage === "profile-edit" ||
       currentPage === "about";
@@ -370,13 +369,6 @@ export function AppSidebar() {
         icon: "brain_ai_3",
         type: "internal" as const,
         href: "/?page=profile-soul",
-      },
-      {
-        key: "my-contexts",
-        title: "settings.personalizationTabs.contexts",
-        icon: "layers",
-        type: "internal" as const,
-        href: "/?page=my-contexts",
       },
       {
         key: "about",
@@ -700,8 +692,6 @@ export function AppSidebar() {
                           searchParams?.get("page") === "profile") ||
                         (item.href === "/?page=profile-soul" &&
                           searchParams?.get("page") === "profile-soul") ||
-                        (item.href === "/?page=my-contexts" &&
-                          searchParams?.get("page") === "my-contexts") ||
                         (item.href === "/?page=account-settings" &&
                           (searchParams?.get("page") === "account-settings" ||
                             searchParams?.get("page") === "profile-edit")) ||
@@ -1359,7 +1349,6 @@ export function AppSidebar() {
                             }
                           }}
                           onLanguageChange={handleLanguageChange}
-                          onLogout={handleLogout}
                           onLogin={handleLogin}
                           onCloseSidebar={() => setIsCollapsed(true)}
                           onOpenContactUs={onOpenContactUs}
@@ -1373,7 +1362,6 @@ export function AppSidebar() {
                         currentLang={currentLang}
                         isMobile={isMobile}
                         onLanguageChange={handleLanguageChange}
-                        onLogout={handleLogout}
                         onLogin={handleLogin}
                         onCloseSidebar={() => setIsCollapsed(true)}
                         onOpenContactUs={onOpenContactUs}
@@ -1552,7 +1540,6 @@ export function AppSidebar() {
                         }
                       }}
                       onLanguageChange={handleLanguageChange}
-                      onLogout={handleLogout}
                       onLogin={handleLogin}
                       onCloseSidebar={() => setIsCollapsed(true)}
                       onOpenContactUs={onOpenContactUs}
@@ -1613,7 +1600,6 @@ export function AppSidebar() {
                         currentLang={currentLang}
                         isMobile={isMobile}
                         onLanguageChange={handleLanguageChange}
-                        onLogout={handleLogout}
                         onLogin={handleLogin}
                         onCloseSidebar={() => setIsCollapsed(true)}
                         onOpenContactUs={onOpenContactUs}

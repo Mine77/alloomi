@@ -43,7 +43,7 @@ import type { ChatHistoryResponse } from "@/lib/ai/chat/api";
 import { mutate } from "swr";
 import { AddPlatformDialog } from "@/components/add-platform-dialog";
 import { useIntegrations } from "@/hooks/use-integrations";
-import { PanelSkeleton } from "@/components/agent/panel-skeleton";
+import { PanelSkeleton, ChatSkeleton } from "@/components/agent/panel-skeleton";
 import { RemixIcon } from "@/components/remix-icon";
 
 // Lazy load motion components to reduce bundle size
@@ -286,6 +286,22 @@ export function Home() {
     });
     router.replace(newPath, { scroll: false });
   }, [localActiveChatId, page, searchParams, router]);
+
+  // Initial redirect: when page is null (first load), redirect to chat page
+  useEffect(() => {
+    // Only redirect when page is null and localActiveChatId is available
+    if (page !== null || !localActiveChatId) return;
+
+    const newPath = buildNavigationUrl({
+      pathname: "/",
+      searchParams,
+      paramsToUpdate: {
+        page: "chat",
+        chatId: localActiveChatId,
+      },
+    });
+    router.replace(newPath, { scroll: false });
+  }, [page, localActiveChatId, searchParams, router]);
 
   // Mobile panel state
   // Note: When initializing, need to consider pathname, ensure value in localStorage matches current path
@@ -836,6 +852,8 @@ export function Home() {
         externalSelectedInsight={selectedInsight}
         onExternalInsightClose={closeExternalInsight}
       />
+    ) : page === null ? (
+      <ChatSkeleton key="chat-skeleton" />
     ) : (
       <PanelSkeleton key="panel-skeleton" />
     );

@@ -32,7 +32,9 @@ export function SessionAuthChecker() {
     const cloudAuthToken = getAuthToken();
 
     // Has session but no cloud_auth_token, need to force logout
-    if (session?.user && !cloudAuthToken) {
+    // But skip for guest users since they don't have cloud auth
+    const isGuest = session?.user?.email?.includes("@guest.local");
+    if (session?.user && !cloudAuthToken && !isGuest) {
       console.log(
         "[SessionAuthChecker] Session exists but no cloud_auth_token, forcing logout",
       );
@@ -45,10 +47,10 @@ export function SessionAuthChecker() {
       // Clear other data in localStorage
       localStorage.clear();
 
-      // Force logout and redirect to login page
+      // Force logout and redirect to guest login page
       signOut({
         redirect: true,
-        callbackUrl: "/login?logout=true",
+        callbackUrl: "/guest-login",
       });
     }
   }, [session, status]);
