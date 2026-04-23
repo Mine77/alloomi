@@ -40,24 +40,14 @@ function isShadowUser(userId: string): boolean {
 
 /**
  * Sync user information from cloud to local
+ * DISABLED: Cloud sync not needed in this version
  */
 async function syncUserFromCloud(
-  cloudClient: CloudApiClient | null,
-  userId: string,
+  _cloudClient: CloudApiClient | null,
+  _userId: string,
 ): Promise<{ name: string | null; avatarUrl: string | null } | null> {
-  if (!cloudClient) {
-    return null;
-  }
-  try {
-    const cloudUser = await cloudClient.getCurrentUser();
-    return {
-      name: cloudUser.name || null,
-      avatarUrl: cloudUser.avatarUrl || null,
-    };
-  } catch (error) {
-    console.error("[UserProfile] Failed to sync user from cloud:", error);
-    return null;
-  }
+  // Cloud sync disabled - return null to use local profile only
+  return null;
 }
 
 export async function GET(request: Request) {

@@ -122,13 +122,10 @@ openssl rand -base64 32
 node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
 ```
 
-| Variable | Description |
-|---|---|
-| `AUTH_SECRET` | Authentication secret (32+ chars) |
+| Variable         | Description                           |
+| ---------------- | ------------------------------------- |
+| `AUTH_SECRET`    | Authentication secret (32+ chars)     |
 | `ENCRYPTION_KEY` | AES-256 encryption key for local data |
-| `POSTGRES_URL` | PostgreSQL connection string |
-| `REDIS_URL` | Redis connection string |
-| `BLOB_READ_WRITE_TOKEN` | Vercel Blob storage token |
 
 #### AI Configuration
 
@@ -156,21 +153,20 @@ LLM_EMBEDDING_MODEL=text-embedding-3-small
 
 #### Optional Integrations
 
-| Variable | Description |
-|---|---|
-| `BRAVE_SEARCH_API_KEY` | Brave Search for web content |
-| `TG_BOT_TOKEN` | Telegram bot token |
-| `SLACK_BOT_TOKEN` | Slack bot token |
-| `DISCORD_BOT_TOKEN` | Discord bot token |
-| `TWITTER_CLIENT_ID` / `_SECRET` | Twitter OAuth |
-| `GOOGLE_CLIENT_ID` / `_SECRET` | Google OAuth |
-| `GMAIL_CLIENT_ID` / `_SECRET` | Gmail OAuth |
-| `AUTH_SMTP_*` | Email SMTP server |
-
+| Variable                        | Description                  |
+| ------------------------------- | ---------------------------- |
+| `BRAVE_SEARCH_API_KEY`          | Brave Search for web content |
+| `TG_BOT_TOKEN`                  | Telegram bot token           |
+| `SLACK_BOT_TOKEN`               | Slack bot token              |
+| `DISCORD_BOT_TOKEN`             | Discord bot token            |
+| `TWITTER_CLIENT_ID` / `_SECRET` | Twitter OAuth                |
+| `GOOGLE_CLIENT_ID` / `_SECRET`  | Google OAuth                 |
+| `GMAIL_CLIENT_ID` / `_SECRET`   | Gmail OAuth                  |
+| `AUTH_SMTP_*`                   | Email SMTP server            |
 
 Requirements: Node.js 22+, pnpm 9+, Rust Cargo 1.88+
 
-## Install 
+## Install
 
 ```bash
 # Install dependencies
