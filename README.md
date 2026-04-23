@@ -13,7 +13,7 @@ Alloomi is a **proactive AI workspace** that monitors business signals, orchestr
 
 <p align="center">
   <a href="https://github.com/melandlabs/release">
-    <img src="https://img.shields.io/badge/Download-Alloomi-24C8D5?logo=github&logoColor=white" alt="Download" height="30" style="transform:scale(1);">
+    <img src="https://img.shields.io/github/v/tag/melandlabs/release?logo=github&label=Download&color=24C8D5" alt="Download" height="30" style="transform:scale(1);">
   </a>
 </p>
 
@@ -25,7 +25,7 @@ Alloomi is a **proactive AI workspace** that monitors business signals, orchestr
 - **🧠 Long-Term Memory (Context Atlas)** — persistent knowledge graphs of people, projects, and decisions; remembers context even months later
 - **🎯 95% Noise Filtering** — hundreds of daily messages refined into one focused panel; tells you what you should act on
 - **⚡ Autonomous Execution** — drafts replies, schedules meetings, generates reports, tracks and validates results end-to-end
-- **💬 Natural Chat** — assign tasks in plain language; no complex commands to learn with powerful skills and MCP tools.
+- **💬 Natural Chat** — assign tasks in plain language; no complex commands to learn with powerful skills and MCP tools
 
 ### Multi-Platform Access
 
