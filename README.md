@@ -18,6 +18,16 @@
 
 Alloomi is a **proactive AI workspace** that monitors business signals, orchestrates tasks autonomously, and tracks and validates results end-to-end. Unlike traditional AI assistants that are passive workflow tools, Alloomi acts as a **proactive AI workspace** that watches, learns, remembers, and acts on your behalf.
 
+> This is the **open-source core** of Alloomi. It includes the core infrastructure and modules, but requires you to configure your own LLM API Key, authentication, authorization, AI MCPs and skills. For the full ready-to-use product with all features enabled, please download from the official website: **[alloomi.ai](https://alloomi.ai)**
+
+
+<p align="center">
+<a href="#features">Features</a>&nbsp;|&nbsp;
+<a href="#what-makes-alloomi-different">Difference</a>&nbsp;|&nbsp;
+<a href="#use-cases">Use Cases</a>&nbsp;|&nbsp;
+<a href="#developing">Developing</a>
+</p>
+
 ## Features
 
 ### Core Capabilities
@@ -241,7 +251,3 @@ pnpm lint         # Lint
 pnpm lint:fix     # Fix lint issues
 pnpm test         # Run tests
 ```
-
-## Note
-
-This is the **open-source core** of Alloomi. It includes the core infrastructure and modules, but requires you to configure your own LLM API Key, authentication, authorization, AI MCPs and skills. For the full ready-to-use product with all features enabled, please download from the official website: **[alloomi.ai](https://alloomi.ai)**
