@@ -148,7 +148,10 @@ export async function inlineResources(
           // Escape </script> in JS content to prevent HTML parser from prematurely closing the script tag.
           // Replace </script> with </scr\x69pt> where \x69 is the hex code for 'i'.
           // The HTML parser won't see this as </script> but JS will interpret \x69 as 'i'.
-          const escapedJsContent = jsContent.replace(/<\/script>/g, "</scr\\x69pt>");
+          const escapedJsContent = jsContent.replace(
+            /<\/script>/g,
+            "</scr\\x69pt>",
+          );
           const inlineJs = `<script>\n${escapedJsContent}\n</script>`;
           // Replace based on position, not string match (to avoid matching strings inside other content)
           processedHtml =
@@ -194,7 +197,10 @@ export async function inlineResources(
         if (jsContent) {
           // Escape </script> in JS content to prevent HTML parser from prematurely closing the script tag.
           // Replace </script> with </scr\x69pt> where \x69 is the hex code for 'i'.
-          const escapedJsContent = jsContent.replace(/<\/script>/g, "</scr\\x69pt>");
+          const escapedJsContent = jsContent.replace(
+            /<\/script>/g,
+            "</scr\\x69pt>",
+          );
           const inlineJs = `<script>\n${escapedJsContent}\n</script>`;
           processedHtml =
             processedHtml.slice(0, matchIndex) +
