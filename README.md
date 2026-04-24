@@ -119,14 +119,16 @@ See [here](https://alloomi.ai/docs) for more features and use cases.
 
 - Office Assistants — Docx, Pptx & Xlsx
 
-<div align="center" style="display:flex; justify-content:center; gap:10px;">
-  <img src="screenshots/app/docx.gif" alt="Docx" style="width:48%; border:1px solid #ddd; border-radius:8px;">
-  <img src="screenshots/app/excel.gif" alt="Excel" style="width:48%; border:1px solid #ddd; border-radius:8px;">
-</div>
+<table align="center">
+<tr>
+<td><img src="screenshots/app/docx.gif" alt="Docx" style="border:1px solid #ddd; border-radius:8px;"></td>
+<td><img src="screenshots/app/excel.gif" alt="Excel" style="border:1px solid #ddd; border-radius:8px;"></td>
+</tr>
+</table>
 
 - Website Generation
 
-<img src="screenshots/website.gif" alt="Website Builder" style="width:100%; border:1px solid #ddd; border-radius:8px;">
+<img src="screenshots/app/website.gif" alt="Website Generation" style="width:100%; border:1px solid #ddd; border-radius:8px;">
 
 - Mutliple Connectors
 
