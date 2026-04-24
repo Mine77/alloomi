@@ -86,7 +86,7 @@ every conversation—and every moment—makes Alloomi smarter and more aligned w
 agent role in Alloomi to handle one-off or scheduled tasks, this brain acts as the orchestrator, dramatically
 improving execution quality.
 
-![Architecture](screenshots/arch.png)
+<img src="screenshots/arch.png" alt="Architecture" style="width:100%; border:1px solid #ddd; border-radius:8px;">
 
 Alloomi implements a complete **"Receive → Process → Remember → Understand → Serve"** loop:
 
@@ -117,29 +117,36 @@ See [here](https://alloomi.ai/docs) for more features and use cases.
 
 ## Screenshots
 
-- Chat
+- Office Assistants — Docx, Pptx & Xlsx
 
-![Chat Interface](screenshots/app/chat.png)
+<div align="center" style="display:flex; justify-content:center; gap:10px;">
+  <img src="screenshots/app/docx.gif" alt="Docx" style="width:48%; border:1px solid #ddd; border-radius:8px;">
+  <img src="screenshots/app/excel.gif" alt="Excel" style="width:48%; border:1px solid #ddd; border-radius:8px;">
+</div>
 
-- Connectors
+- Website Generation
 
-![Connector](screenshots/app/connector.png)
+<img src="screenshots/website.gif" alt="Website Builder" style="width:100%; border:1px solid #ddd; border-radius:8px;">
+
+- Mutliple Connectors
+
+<img src="screenshots/app/connector.png" alt="Connector" style="width:100%; border:1px solid #ddd; border-radius:8px;">
 
 - Automation & Cron Jobs
 
-![Automation](screenshots/app/automation.png)
+<img src="screenshots/app/automation.png" alt="Automation" style="width:100%; border:1px solid #ddd; border-radius:8px;">
 
 - Library
 
-![Library](screenshots/app/library.png)
+<img src="screenshots/app/library.png" alt="Library" style="width:100%; border:1px solid #ddd; border-radius:8px;">
 
-- Skill
+- Skills
 
-![Skill](screenshots/app/skill.png)
+<img src="screenshots/app/skill.png" alt="Skill" style="width:100%; border:1px solid #ddd; border-radius:8px;">
 
 - Message Apps
 
-![Message App](screenshots/app/message-app.png)
+<img src="screenshots/app/message-app.png" alt="Message App" style="width:100%; border:1px solid #ddd; border-radius:8px;">
 
 See [alloomi.ai](https://alloomi.ai) for more information.
 
