@@ -702,6 +702,7 @@ export function FilePreviewPanel({
           >
             <PptxPreview
               artifact={{ ...file, path: fullArtifactPath || file.path }}
+              taskId={taskId}
             />
           </ErrorBoundary>
         ) : null}

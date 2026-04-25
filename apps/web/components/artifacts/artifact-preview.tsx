@@ -60,6 +60,7 @@ interface ArtifactPreviewProps {
   artifact: Artifact;
   className?: string;
   maxHeight?: string;
+  taskId?: string;
 }
 
 /**
@@ -195,6 +196,7 @@ export function ArtifactPreview({
   artifact,
   className,
   maxHeight,
+  taskId,
 }: ArtifactPreviewProps) {
   const { type, name, content, path, url, fileSize } = artifact;
 
@@ -390,6 +392,7 @@ export function ArtifactPreview({
         >
           <PptxPreview
             artifact={{ path: fileSource, name: name || "presentation" }}
+            taskId={taskId}
           />
         </Suspense>
       </div>

@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import * as JSZipModule from "jszip";
+import {
+  getRenderEngineStatus,
+} from "@/lib/tauri";
 
 /** JSZip module type (export = JSZip, with both constructor and static methods like loadAsync) */
 type JSZipType = import("jszip");
@@ -39,6 +42,7 @@ interface PptxSlide {
   imageUrl?: string;
   shapes: PptxShape[];
   background?: string;
+  renderedImageUrl?: string;
 }
 
 interface PptxPreviewProps {
@@ -46,6 +50,7 @@ interface PptxPreviewProps {
     path: string;
     name: string;
   };
+  taskId?: string;
 }
 
 const MAX_PREVIEW_SIZE = 100 * 1024 * 1024; // 100MB
@@ -53,13 +58,19 @@ const MAX_PREVIEW_SIZE = 100 * 1024 * 1024; // 100MB
 /**
  * Read local PPTX file using Tauri fs plugin
  */
-export function PptxPreview({ artifact }: PptxPreviewProps) {
+export function PptxPreview({ artifact, taskId }: PptxPreviewProps) {
   const { t } = useTranslation();
   const [slides, setSlides] = useState<PptxSlide[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [fileTooLarge, setFileTooLarge] = useState<number | null>(null);
+  const [serverRenderWarning, setServerRenderWarning] = useState<string | null>(
+    null,
+  );
+  const [renderEngineStatusMessage, setRenderEngineStatusMessage] = useState<
+    string | null
+  >(null);
 
   // Add debug log
   console.log("[PptxPreview] Received artifact:", {
@@ -133,6 +144,92 @@ export function PptxPreview({ artifact }: PptxPreviewProps) {
       }, 30000); // 30 second timeout
 
       try {
+        setServerRenderWarning(null);
+        setRenderEngineStatusMessage(null);
+        let shouldAttemptServerRender = true;
+
+        const isTauri = !!(window as any).__TAURI__;
+        if (isTauri) {
+          const nativeRenderEngineStatus = await getRenderEngineStatus();
+
+          if (!nativeRenderEngineStatus?.available) {
+            const reason = nativeRenderEngineStatus?.reason || "error";
+            shouldAttemptServerRender = false;
+
+            if (reason === "not_installed") {
+              setRenderEngineStatusMessage(
+                t(
+                  "common.pptxPreview.renderEngineMissing",
+                  "High-fidelity render engine is unavailable in this app build. Preview is using the simplified built-in renderer for now.",
+                ),
+              );
+            } else if (
+              reason === "invalid_record" ||
+              reason === "error"
+            ) {
+              setRenderEngineStatusMessage(
+                t(
+                  "common.pptxPreview.renderEngineUnavailable",
+                  "High-fidelity render engine is unavailable right now. Preview is using the simplified built-in renderer.",
+                ),
+              );
+            }
+          }
+        }
+
+        if (taskId && shouldAttemptServerRender) {
+          const previewRes = await fetch(
+            `/api/workspace/pptx-preview/${encodeURIComponent(taskId)}/${encodeURIComponent(artifact.path)}`,
+          );
+
+          if (previewRes.ok) {
+            const manifest = (await previewRes.json()) as {
+              slides?: Array<{
+                index: number;
+                path: string;
+                width?: number;
+                height?: number;
+              }>;
+            };
+
+            if (manifest.slides?.length) {
+              if (isCancelled) return;
+
+              const renderedSlides: PptxSlide[] = manifest.slides.map((slide) => ({
+                index: slide.index + 1,
+                title: `${t("common.pptxPreview.slide")} ${slide.index + 1}`,
+                content: [],
+                shapes: [],
+                background: "#ffffff",
+                renderedImageUrl: `/api/workspace/file/${encodeURIComponent(taskId)}/${encodeURIComponent(slide.path)}?binary=true`,
+              }));
+
+              setSlides(renderedSlides);
+              setError(null);
+              setLoading(false);
+              return;
+            }
+
+            setServerRenderWarning(
+              t(
+                "common.pptxPreview.serverRenderUnavailable",
+                "Server-rendered preview unavailable. Showing simplified preview instead.",
+              ),
+            );
+          } else {
+            setServerRenderWarning(
+              t(
+                "common.pptxPreview.serverRenderUnavailableWithReason",
+                {
+                  defaultValue:
+                    "Server-rendered preview unavailable ({{reason}}). Showing simplified preview instead.",
+                  reason: `${previewRes.status} ${previewRes.statusText || "request failed"}`,
+                },
+              ),
+            );
+          }
+        }
+
         // Only use custom commands in Tauri desktop environment
         const { readFileBinary, fileStat } = await import("@/lib/tauri");
 
@@ -545,7 +642,7 @@ export function PptxPreview({ artifact }: PptxPreviewProps) {
       }
       blobUrls.forEach((url) => URL.revokeObjectURL(url));
     };
-  }, [artifact.path]);
+  }, [artifact.path, taskId]);
 
   // Navigate slides
   const goToPrev = () => {
@@ -679,9 +776,32 @@ export function PptxPreview({ artifact }: PptxPreviewProps) {
           className="relative aspect-[16/9] w-full max-w-4xl overflow-hidden rounded-lg shadow-xl"
           style={{ backgroundColor: slide.background || "#ffffff" }}
         >
+          {renderEngineStatusMessage ? (
+            <div className="absolute inset-x-4 top-4 z-20 rounded-md border border-sky-300 bg-sky-50/95 px-3 py-2 text-xs text-sky-950 shadow-sm backdrop-blur-sm">
+              {renderEngineStatusMessage}
+            </div>
+          ) : null}
+
+          {serverRenderWarning ? (
+            <div
+              className={cn(
+                "absolute inset-x-4 z-20 rounded-md border border-amber-300 bg-amber-50/95 px-3 py-2 text-xs text-amber-900 shadow-sm backdrop-blur-sm",
+                renderEngineStatusMessage ? "top-16" : "top-4",
+              )}
+            >
+              {serverRenderWarning}
+            </div>
+          ) : null}
+
           {/* Render shapes */}
           <div className="absolute inset-0">
-            {slide.shapes && slide.shapes.length > 0 ? (
+            {slide.renderedImageUrl ? (
+              <img
+                src={slide.renderedImageUrl}
+                alt={slide.title}
+                className="h-full w-full object-contain"
+              />
+            ) : slide.shapes && slide.shapes.length > 0 ? (
               slide.shapes.map((shape) => {
                 // Convert EMU units (English Metric Units) to pixels
                 // 914400 EMU = 1 inch, typical slide is 10x7.5 inches
@@ -858,7 +978,13 @@ export function PptxPreview({ artifact }: PptxPreviewProps) {
                   : "border-border hover:border-primary/50",
               )}
             >
-              {s.shapes && s.shapes.length > 0 ? (
+              {s.renderedImageUrl ? (
+                <img
+                  src={s.renderedImageUrl}
+                  alt={s.title}
+                  className="h-full w-full object-cover"
+                />
+              ) : s.shapes && s.shapes.length > 0 ? (
                 <div
                   className="absolute inset-0"
                   style={{ backgroundColor: s.background || "#ffffff" }}

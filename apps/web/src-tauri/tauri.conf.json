@@ -56,7 +56,8 @@
       "../.next/standalone/apps/web/server.js",
       "../.next/standalone/apps/web/public/**/*",
       "../.env",
-      "resources/loading.html"
+      "resources/loading.html",
+      "resources/render-engine/**/*"
     ],
     "windows": {
       "certificateThumbprint": null,

@@ -14,6 +14,7 @@ Usage:
     subprocess.run(["soffice", ...], env=env)
 """
 
+import argparse
 import os
 import socket
 import subprocess
@@ -32,9 +33,11 @@ def get_soffice_env() -> dict:
     return env
 
 
-def run_soffice(args: list[str], **kwargs) -> subprocess.CompletedProcess:
+def run_soffice(
+    args: list[str], soffice_bin: str = "soffice", **kwargs
+) -> subprocess.CompletedProcess:
     env = get_soffice_env()
-    return subprocess.run(["soffice"] + args, env=env, **kwargs)
+    return subprocess.run([soffice_bin] + args, env=env, **kwargs)
 
 
 
@@ -178,6 +181,8 @@ int close(int fd) {
 
 
 if __name__ == "__main__":
-    import sys
-    result = run_soffice(sys.argv[1:])
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument("--soffice-bin", default="soffice")
+    known, passthrough = parser.parse_known_args()
+    result = run_soffice(passthrough, soffice_bin=known.soffice_bin)
     sys.exit(result.returncode)
