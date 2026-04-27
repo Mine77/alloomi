@@ -132,9 +132,8 @@ export function judgeGuest(session: Session) {
 }
 
 /**
- * Get the home path based on character tab mode.
- * In character tab mode, returns "/character", otherwise returns "/".
+ * Get the home path for navigation.
  */
 export function getHomePath(): string {
-  return "/character";
+  return "/";
 }

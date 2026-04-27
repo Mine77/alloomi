@@ -1617,60 +1617,6 @@ export function ChatContextProvider({ children }: { children: ReactNode }) {
     Map<string, ChatSessionState>
   >(loadChatSessionStatesFromStorage);
 
-  // On mount, reconcile stale isAgentRunning states with real backend execution status.
-  // When the browser is refreshed or crashes mid-execution, localStorage can retain
-  // isAgentRunning: true even after the job completes. This effect checks the backend
-  // and clears stale entries.
-  // Safe to run only on mount because chatSessionStates is initialized synchronously
-  // from localStorage via useState(loadChatSessionStatesFromStorage).
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    let hasRunning = false;
-    for (const [, state] of chatSessionStates) {
-      if (state.isAgentRunning) {
-        hasRunning = true;
-        break;
-      }
-    }
-    if (!hasRunning) return;
-
-    const controller = new AbortController();
-    fetch("/api/characters", { signal: controller.signal })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (!data?.characters) return;
-        // Build a set of jobId values for characters that are actually running
-        const runningJobIds = new Set(
-          data.characters
-            .filter((c: any) => c.latestResult?.status === "running")
-            .map((c: any) => c.jobId),
-        );
-        // Clear isAgentRunning for any chatId that is NOT actually running
-        setChatSessionStates((prev) => {
-          let needsUpdate = false;
-          for (const [id, state] of prev) {
-            if (state.isAgentRunning && !runningJobIds.has(id)) {
-              needsUpdate = true;
-              break;
-            }
-          }
-          if (!needsUpdate) return prev;
-          const newMap = new Map(prev);
-          for (const [id, state] of newMap) {
-            if (state.isAgentRunning && !runningJobIds.has(id)) {
-              newMap.set(id, { ...state, isAgentRunning: false });
-            }
-          }
-          return newMap;
-        });
-      })
-      .catch(() => {
-        // Silently fail - stale state will clear on next successful check
-      });
-    return () => controller.abort();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Run only once on mount
-
   // Use ref to store current abortFn, ensure stop function can access synchronously
   // Avoid issues caused by React state async updates
   const abortFnRef = useRef<(() => void) | null>(null);
