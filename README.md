@@ -87,18 +87,16 @@ pnpm tauri:dev
 
 > More demos can be found [here](https://alloomi.ai/docs/alloomi/use-cases/industry-intelligence)
 
-
 ## Features
 
-### Core Capabilities
+### Proactive Awareness
 
-- **📡 Proactive Awareness** — monitors signals across Slack, Email, Calendar, Documents and alerts you proactively before issues escalate
-- **🧠 Long-Term Memory (Context Atlas)** — persistent knowledge graphs of people, projects, and decisions; remembers context even months later
+- **📡 Signal Monitoring** — monitors signals across Slack, Email, Calendar, Documents and alerts you proactively before issues escalate
+- **🧠 Long-Term Memory** — persistent knowledge graphs of people, projects, and decisions; remembers context even months later
 - **🎯 95% Noise Filtering** — hundreds of daily messages refined into one focused panel; tells you what you should act on
 - **⚡ Autonomous Execution** — drafts replies, schedules meetings, generates reports, tracks and validates results end-to-end; supports **scheduled tasks** (cron-like recurring jobs) and **proactively triggered tasks** (event-driven actions based on signals from Slack, Email, Calendar, etc.)
-- **💬 Natural Chat** — assign tasks in plain language; no complex commands to learn with powerful skills and MCP tools
 
-### Built-in File Preview
+### Instant Preview
 
 - **Documents** — Docx, DOC, ODT, RTF
 - **Spreadsheets** — Xlsx, XLS, CSV, ODS
