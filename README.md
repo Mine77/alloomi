@@ -123,14 +123,6 @@ pnpm tauri:dev
 
 <img src="screenshots/components.png" alt="Components" style="width:100%; border:1px solid #ddd; border-radius:8px;">
 
-| Layer          | Function                                   |
-| -------------- | ------------------------------------------ |
-| **Receive**    | Multi-platform, multi-modal message input  |
-| **Process**    | Deduplication, OCR, ASR, intent extraction |
-| **Remember**   | Persistent knowledge graph                 |
-| **Understand** | Deep semantic understanding                |
-| **Serve**      | Proactive service delivery                 |
-
 > 📖 [Learn more about architecture here](https://alloomi.ai/docs/alloomi)
 
 ## Documentation
