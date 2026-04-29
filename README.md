@@ -20,25 +20,15 @@ Alloomi is a **proactive AI workspace** that monitors business signals, orchestr
 
 > ⚠️ **Open-source vs Full Product**: This is the open-source core. For the full ready-to-use product, download from **[alloomi.ai](https://alloomi.ai)**
 
-<p align="center">
-<a href="#quick-start">Quick Start</a>&nbsp;|&nbsp;
-<a href="#screenshots">Screenshots</a>&nbsp;|&nbsp;
-<a href="#features">Features</a>&nbsp;|&nbsp;
-<a href="#quick-questions">Q & A</a>&nbsp;|&nbsp;
-<a href="https://alloomi.ai/docs">Documentation</a>&nbsp;|&nbsp;
-<a href="https://alloomi.ai/blogs">Blogs</a>
-</p>
-
 ## What Problems Does Alloomi Solve?
 
-| Without Alloomi | With Alloomi |
-|-----------------|--------------|
-| Switching between WeChat, Telegram, WhatsApp to reply | **One interface, reply to all** |
-| Manually check Slack, Email, Calendar for updates | **AI proactively alerts you** |
-| Repetitive tasks done manually every day | **Set scheduled tasks, AI executes automatically** |
-| Forget context after months | **Long-term memory that remembers everything** |
+| Without Alloomi                                       | With Alloomi                                       |
+| ----------------------------------------------------- | -------------------------------------------------- |
+| Switching between WeChat, Telegram, WhatsApp to reply | **One interface, reply to all**                    |
+| Manually check Slack, Email, Calendar for updates     | **AI proactively alerts you**                      |
+| Repetitive tasks done manually every day              | **Set scheduled tasks, AI executes automatically** |
+| Forget context after months                           | **Long-term memory that remembers everything**     |
 
----
 
 ## Quick Start
 
@@ -79,13 +69,11 @@ pnpm tauri:dev
 ```
 
 > ⚠️ **Open Source vs Full Version**
+>
 > - **Open Source**: Core modules + bring your own API keys + configure MCPs
 > - **Full Version**: [alloomi.ai](https://alloomi.ai) — download and use immediately
 
-
 ## Screenshots
-
-- Document Previews — Docx, PPTx, Xlsx & Mind Map
 
 <table align="center">
 <tr>
@@ -93,34 +81,27 @@ pnpm tauri:dev
 <td><img src="screenshots/app/excel.gif" alt="Excel" style="border:1px solid #ddd; border-radius:8px;"></td>
 </tr>
 <tr>
-<td><img src="screenshots/app/pptx.gif" alt="PPTx" style="border:1px solid #ddd; border-radius:8px;"></td>
-<td><img src="screenshots/app/mmark.gif" alt="MindMap" style="border:1px solid #ddd; border-radius:8px;"></td>
+<td colspan="2" align="center">Document Previews (Docx, Excel)</td>
+</tr>
+<tr>
+<td><img src="screenshots/app/website.gif" alt="Website Generation" style="border:1px solid #ddd; border-radius:8px;"></td>
+<td><img src="screenshots/app/connectors.gif" alt="Connectors" style="border:1px solid #ddd; border-radius:8px;"></td>
+</tr>
+<tr>
+<td align="center">Website Generation</td>
+<td align="center">Multiple Connectors</td>
+</tr>
+<tr>
+<td><img src="screenshots/app/automation.gif" alt="Automation" style="border:1px solid #ddd; border-radius:8px;"></td>
+<td><img src="screenshots/app/library.gif" alt="Library" style="border:1px solid #ddd; border-radius:8px;"></td>
+</tr>
+<tr>
+<td colspan="2" align="center">Automation & Cron Jobs | Library Gallery</td>
 </tr>
 </table>
 
-- Website Generation
+> More demos can be found [here](https://alloomi.ai/docs/alloomi/use-cases/industry-intelligence)
 
-<img src="screenshots/app/website.gif" alt="Website Generation" style="width:100%; border:1px solid #ddd; border-radius:8px;">
-
-- Mutliple Connectors
-
-<img src="screenshots/app/connectors.gif" alt="Connector" style="width:100%; border:1px solid #ddd; border-radius:8px;">
-
-- Automation & Cron Jobs
-
-<img src="screenshots/app/automation.gif" alt="Automation" style="width:100%; border:1px solid #ddd; border-radius:8px;">
-
-- Library
-
-<img src="screenshots/app/library.gif" alt="Library" style="width:100%; border:1px solid #ddd; border-radius:8px;">
-
-- Skills
-
-<img src="screenshots/app/skills.gif" alt="Skill" style="width:100%; border:1px solid #ddd; border-radius:8px;">
-
-- Message Apps
-
-<img src="screenshots/app/message-app.png" alt="Message App" style="width:100%; border:1px solid #ddd; border-radius:8px;">
 
 ## Features
 
@@ -153,81 +134,30 @@ pnpm tauri:dev
 - Zero training commitments — your data never trains public AI models
 - Local-first architecture
 
-### Agent Runtime Integrations
+## Technical Architecture
 
-- **Claude Code** — Anthropic's coding agent (auto-inherits `ANTHROPIC_API_KEY`, `ANTHROPIC_BASE_URL`, `ANTHROPIC_MODEL` from environment & [skills](https://code.claude.com/docs/en/skills) in `~/.claude/skills`) _(Default)_
-- **Codex** — OpenAI's code generation agent _(Coming Soon)_
-- **Gemmi** — General-purpose AI agent _(Coming Soon)_
-- **Pi** — Inflection AI's personal agent _(Coming Soon)_
-- **OpenClaw** — Open agent protocol & ecosystem _(Coming Soon)_
-- **Hermes Agent** — NousResearch's agent framework _(Coming Soon)_
+<img src="screenshots/components.png" alt="Components" style="width:100%; border:1px solid #ddd; border-radius:8px;">
 
-### Hybrid Model Architecture (Coming Soon)
+| Layer          | Function                                   |
+| -------------- | ------------------------------------------ |
+| **Receive**    | Multi-platform, multi-modal message input  |
+| **Process**    | Deduplication, OCR, ASR, intent extraction |
+| **Remember**   | Persistent knowledge graph                 |
+| **Understand** | Deep semantic understanding                |
+| **Serve**      | Proactive service delivery                 |
 
-- **🤖 Hybrid Model Routing** — dynamically routes tasks to optimal models (Claude, GPT, Gemini, open-source) based on complexity, cost, and latency requirements
-- **🧪 Reinforcement Learning from Feedback (RLHF) & LoRA** — continuously improves task execution quality through human feedback signals
-- **🔄 Multi-Agent Debate** — multiple specialized agents collaborate and debate to reach higher-quality decisions
-- **📊 Outcome Validation** — end-to-end result verification with automated checks and human-in-the-loop approval workflows
-- **🧬 Adaptive Personalization** — learns your communication style, preferences, and workflows over time
+> 📖 [Learn more about architecture here](https://alloomi.ai/docs/alloomi)
 
 ## Documentation
 
-Detailed documentation is available at [Alloomi Website](https://alloomi.ai/docs).
+Detailed documentation is available at [here](https://alloomi.ai/docs).
 
-## Quick Questions
+## Community
 
-<details>
-<summary><b>What Makes Alloomi Different?</b></summary>
+- [![Discord](https://img.shields.io/badge/Discord-Join-5865F2?logo=discord&logoColor=white)](https://discord.com/invite/xkJaJyWcsv)
+- [![X](https://img.shields.io/badge/X-Follow-000000?logo=x&logoColor=white)](https://x.com/AlloomiAI)
+- [![Email Us](https://img.shields.io/badge/Email_Us-developer@alloomi.ai-24C8D5?logo=email&logoColor=white)](mailto:developer@alloomi.ai)
 
-Most AI assistants are **workflow tools**—you give commands, they execute tasks, with no knowledge of
-who you are. Sometimes they surprise you in ways you didn't expect. But usually, most of the time, they
-frustrate you, filled with uncertainty, and accompanied by issues of context, memory, cost, and security.
+## License
 
-Alloomi is different: it's a **proactive digital partner** that watches, learns, remembers, and acts on
-your behalf. The difference is architectural.
-
-When you connect your messaging platforms and integrations to Alloomi, you don't just chat with it through
-Telegram, WhatsApp, and other apps—you also sync everything with your permission: raw messages, meetings,
-emails, tweets, calendar events, voice calls, and any notes or ideas you've captured. All of this—including
-your conversations with Alloomi itself—becomes the **single source of truth** for Alloomi's brain.
-
-Behind the scenes, Alloomi runs a background agent on a continuous sync loop, actively gathering information
-from all your connected sources. An agent without this loop can only respond based on stale context. With it,
-every conversation—and every moment—makes Alloomi smarter and more aligned with you. When you create a custom
-agent role in Alloomi to handle one-off or scheduled tasks, this brain acts as the orchestrator, dramatically
-improving execution quality.
-
-<img src="screenshots/arch.png" alt="Architecture" style="width:100%; border:1px solid #ddd; border-radius:8px;">
-
-Alloomi implements a complete **"Receive → Process → Remember → Understand → Serve"** loop:
-
-| Layer             | What It Does                                                                                         |
-| ----------------- | ---------------------------------------------------------------------------------------------------- |
-| **📡 Receive**    | Multi-platform, multi-modal ingestion — IM, email, documents, files, web data, voice calls           |
-| **⚙️ Process**    | Noise reduction at scale — deduplication, OCR, ASR, intent extraction, semantic clustering           |
-| **🧠 Remember**   | Persistent knowledge graph — people, projects, decisions — survives conversations and months of time |
-| **🎯 Understand** | Deep semantic intent, cross-modal understanding, emotional tone, contextual relevance                |
-| **🚀 Serve**      | Proactive delivery — smart summaries, auto-replies, scheduled reports, personalized alerts           |
-
-### Layered Memory Architecture
-
-- **Raw information** — original messages, files, transcripts
-- **Information insights** — extracted entities, decisions, key events, timeline, execution diff
-- **Contextual memory** — recent conversation state, temporary context
-- **Knowledge-base memory** — long-term people/projects/preferences knowledge graph
-
-</details>
-
-<details>
-<summary><b>Is it free?</b></summary>
-
-Yes! Alloomi is **completely free and open source**. You can use any AI API keys you prefer. If you prefer a hosted, fully-managed experience without setup, you can also choose the commercial version at [alloomi.ai](https://alloomi.ai).
-
-</details>
-
-<details>
-<summary><b>Is my data secure?</b></summary>
-
-Yes! All data is stored on your machine.
-
-</details>
+Apache License 2.0 — see [LICENSE](./LICENSE)
