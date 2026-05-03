@@ -46,7 +46,6 @@
     "@alloomi/ai": "workspace:*",
     "@alloomi/api": "workspace:*",
     "@alloomi/audit": "workspace:*",
-    "@alloomi/billing": "workspace:*",
     "@alloomi/hooks": "workspace:*",
     "@alloomi/i18n": "workspace:*",
     "@alloomi/indexeddb": "workspace:*",
