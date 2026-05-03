@@ -84,6 +84,10 @@ export class UniversalEmbeddings {
       }
     } else if (this.userAuthToken) {
       headers.Authorization = `Bearer ${this.userAuthToken}`;
+    } else {
+      console.warn(
+        `[RAG] No auth token available for embeddings API. This may cause request failures or use default rate limits. baseURL=${this.baseURL}, hasApiKey=${!!this.apiKey}`,
+      );
     }
 
     const response = await fetch(`${this.baseURL}/embeddings`, {
@@ -105,7 +109,7 @@ export class UniversalEmbeddings {
 
     if (!data.data || !Array.isArray(data.data)) {
       throw new Error(
-        `Invalid response format from embeddings API. Expected data.data array.`,
+        "Invalid response format from embeddings API. Expected data.data array.",
       );
     }
 

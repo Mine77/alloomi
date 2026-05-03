@@ -53,7 +53,8 @@ export type AgentMessageType =
   | "question"
   | "insightsRefresh"
   | "permission_request"
-  | "password_input";
+  | "password_input"
+  | "reasoning";
 
 export interface AgentMessage {
   type: AgentMessageType;
@@ -304,6 +305,11 @@ export interface AgentOptions {
   language?: string | null;
   /** User timezone for date/time operations */
   timezone?: string | null;
+  /** Internal scheduled-job execution report submission hook */
+  executionReport?: {
+    enabled: boolean;
+    onSubmit: (report: unknown) => void;
+  };
 }
 
 export interface PlanOptions extends AgentOptions {

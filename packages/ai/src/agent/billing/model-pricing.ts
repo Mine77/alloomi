@@ -11,22 +11,31 @@ export type ModelType =
   | "anthropic/claude-sonnet-4.6"
   | "anthropic/claude-sonnet-4.5"
   | "anthropic/claude-opus-4.6"
+  | "anthropic/claude-opus-4.7"
   | "anthropic/claude-haiku-4.5"
-  | "deepseek/deepseek-v3.2"
+  | "openai/gpt-5.4-mini"
+  | "openai/gpt-5.4-nano"
+  | "openai/gpt-5.4"
+  | "openai/gpt-5.4-pro"
+  | "openai/gpt-5.5"
+  | "openai/gpt-5.5-pro"
   | "google/gemini-3-flash-preview"
   | "google/gemini-3-pro-preview"
+  | "google/gemini-3.1-flash-lite-preview"
   | "google/gemini-3.1-pro-preview"
+  | "x-ai/grok-4.3"
+  | "x-ai/grok-4.20"
+  | "deepseek/deepseek-v4-flash"
+  | "deepseek/deepseek-v4-pro"
   | "z-ai/glm-5"
-  | "grok/grok-4.1-fast"
+  | "z-ai/glm-5.1"
   | "moonshotai/kimi-k2.5"
+  | "moonshotai/kimi-k2.6"
   | "minimax/minimax-m2.5"
-  | "stepfun/step-3.5-flash"
-  | "openai/gpt-4o"
-  | "openai/gpt-4o-mini"
-  | "openai/gpt-5.2-codex"
-  | "openai/gpt-5.2-mini"
-  | "openai/gpt-5-nano"
-  | "xiaomi/mimo-v2-omni";
+  | "minimax/minimax-m2.7"
+  | "xiaomi/mimo-v2.5"
+  | "xiaomi/mimo-v2.5-pro"
+  | "stepfun/step-3.5-flash";
 
 export interface ModelPricing {
   inputPricePerMillion: number;
@@ -57,23 +66,33 @@ export const MODEL_PRICING: Record<ModelType, ModelPricing> = {
     supportsVision: true,
   },
   "anthropic/claude-opus-4.6": {
-    inputPricePerMillion: 15,
-    outputPricePerMillion: 75,
+    inputPricePerMillion: 5,
+    outputPricePerMillion: 25,
+    supportsVision: true,
+  },
+  "anthropic/claude-opus-4.7": {
+    inputPricePerMillion: 5,
+    outputPricePerMillion: 25,
     supportsVision: true,
   },
   "anthropic/claude-haiku-4.5": {
-    inputPricePerMillion: 0.25,
-    outputPricePerMillion: 1.25,
+    inputPricePerMillion: 1,
+    outputPricePerMillion: 5,
     supportsVision: true,
   },
-  "deepseek/deepseek-v3.2": {
-    inputPricePerMillion: 0.14,
-    outputPricePerMillion: 0.28,
+  "deepseek/deepseek-v4-flash": {
+    inputPricePerMillion: 1.392,
+    outputPricePerMillion: 2.784,
+    supportsVision: false,
+  },
+  "deepseek/deepseek-v4-pro": {
+    inputPricePerMillion: 1.7,
+    outputPricePerMillion: 3.4,
     supportsVision: false,
   },
   "google/gemini-3-flash-preview": {
-    inputPricePerMillion: 0.15,
-    outputPricePerMillion: 0.6,
+    inputPricePerMillion: 0.5,
+    outputPricePerMillion: 3,
     supportsVision: true,
   },
   "google/gemini-3-pro-preview": {
@@ -82,53 +101,83 @@ export const MODEL_PRICING: Record<ModelType, ModelPricing> = {
     supportsVision: true,
   },
   "google/gemini-3.1-pro-preview": {
-    inputPricePerMillion: 1.25,
-    outputPricePerMillion: 10,
+    inputPricePerMillion: 2,
+    outputPricePerMillion: 12,
     supportsVision: true,
   },
-  "z-ai/glm-5": {
-    inputPricePerMillion: 0.5,
-    outputPricePerMillion: 0.5,
-    supportsVision: false,
-  },
-  "grok/grok-4.1-fast": {
-    inputPricePerMillion: 0.5,
+  "google/gemini-3.1-flash-lite-preview": {
+    inputPricePerMillion: 0.25,
     outputPricePerMillion: 1.5,
     supportsVision: true,
   },
+  "z-ai/glm-5": {
+    inputPricePerMillion: 0.6,
+    outputPricePerMillion: 2.08,
+    supportsVision: false,
+  },
+  "z-ai/glm-5.1": {
+    inputPricePerMillion: 1.05,
+    outputPricePerMillion: 3.5,
+    supportsVision: false,
+  },
+  "x-ai/grok-4.3": {
+    inputPricePerMillion: 1.25,
+    outputPricePerMillion: 2.5,
+    supportsVision: true,
+  },
+  "x-ai/grok-4.20": {
+    inputPricePerMillion: 1.25,
+    outputPricePerMillion: 2.5,
+    supportsVision: true,
+  },
   "moonshotai/kimi-k2.5": {
-    inputPricePerMillion: 0.12,
-    outputPricePerMillion: 0.12,
+    inputPricePerMillion: 0.44,
+    outputPricePerMillion: 2,
+    supportsVision: true,
+  },
+  "moonshotai/kimi-k2.6": {
+    inputPricePerMillion: 0.74,
+    outputPricePerMillion: 3.49,
     supportsVision: true,
   },
   "minimax/minimax-m2.5": {
-    inputPricePerMillion: 0.05,
-    outputPricePerMillion: 0.05,
+    inputPricePerMillion: 0.15,
+    outputPricePerMillion: 1.15,
     supportsVision: false,
   },
-  "openai/gpt-4o": {
-    inputPricePerMillion: 2.5,
-    outputPricePerMillion: 10,
-    supportsVision: true,
-  },
-  "openai/gpt-4o-mini": {
-    inputPricePerMillion: 0.15,
-    outputPricePerMillion: 0.6,
-    supportsVision: true,
-  },
-  "openai/gpt-5.2-codex": {
-    inputPricePerMillion: 5,
-    outputPricePerMillion: 25,
-    supportsVision: true,
-  },
-  "openai/gpt-5.2-mini": {
+  "minimax/minimax-m2.7": {
     inputPricePerMillion: 0.3,
     outputPricePerMillion: 1.2,
+    supportsVision: false,
+  },
+  "openai/gpt-5.4-mini": {
+    inputPricePerMillion: 30,
+    outputPricePerMillion: 180,
     supportsVision: true,
   },
-  "openai/gpt-5-nano": {
-    inputPricePerMillion: 0.15,
-    outputPricePerMillion: 0.6,
+  "openai/gpt-5.4-nano": {
+    inputPricePerMillion: 2.5,
+    outputPricePerMillion: 15,
+    supportsVision: true,
+  },
+  "openai/gpt-5.4": {
+    inputPricePerMillion: 5,
+    outputPricePerMillion: 15,
+    supportsVision: true,
+  },
+  "openai/gpt-5.4-pro": {
+    inputPricePerMillion: 30,
+    outputPricePerMillion: 180,
+    supportsVision: true,
+  },
+  "openai/gpt-5.5": {
+    inputPricePerMillion: 0.2,
+    outputPricePerMillion: 1.25,
+    supportsVision: true,
+  },
+  "openai/gpt-5.5-pro": {
+    inputPricePerMillion: 0.75,
+    outputPricePerMillion: 4.5,
     supportsVision: true,
   },
   "stepfun/step-3.5-flash": {
@@ -136,9 +185,16 @@ export const MODEL_PRICING: Record<ModelType, ModelPricing> = {
     outputPricePerMillion: 0.3,
     supportsVision: false,
   },
-  "xiaomi/mimo-v2-omni": {
+  "xiaomi/mimo-v2.5": {
     inputPricePerMillion: 0.4,
     outputPricePerMillion: 2,
+    supportsVision: true,
+    supportsAudio: true,
+    supportsTranscription: true,
+  },
+  "xiaomi/mimo-v2.5-pro": {
+    inputPricePerMillion: 1,
+    outputPricePerMillion: 3,
     supportsVision: true,
     supportsAudio: true,
     supportsTranscription: true,

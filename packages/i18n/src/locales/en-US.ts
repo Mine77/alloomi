@@ -11,10 +11,13 @@ const enUS = {
     sync: "Sync",
     syncing: "Syncing...",
     close: "Close",
+    closeDialog: "Close dialog",
     back: "Back",
     fullscreen: "Fullscreen",
+    exitFullscreen: "Exit fullscreen",
     edit: "Edit",
     error: "Error",
+    failed: "Failed",
     save: "Save",
     unbind: "Unbind",
     unassociate: "Unassociate",
@@ -48,6 +51,8 @@ const enUS = {
     none: "None",
     comingSoon: "Coming Soon",
     reasoning: "Reasoning",
+    reasoningInProgress: "Reasoning in progress",
+    reasoningCompleted: "Reasoning completed",
     reasonedSeconds: "Reasoned for a few seconds",
     editMessage: "Edit Message",
     upvoteResponse: "Like",
@@ -489,6 +494,7 @@ const enUS = {
       runningModifyInsight: "Modifying insight...",
       runningSearchKnowledgeBase: "Searching knowledge base...",
       runningGetFullDocumentContent: "Reading document...",
+      runningListKnowledgeBaseDocuments: "Listing knowledge base documents...",
       runningSearchMemoryPath: "Searching memory...",
       runningGetRawMessages: "Searching messages...",
       runningSearchRawMessages: "Searching raw messages...",
@@ -514,6 +520,7 @@ const enUS = {
       modifyInsight: "Modifying Insight",
       searchKnowledgeBase: "Searching Knowledge Base",
       getFullDocumentContent: "Reading Document",
+      listKnowledgeBaseDocuments: "Listing Knowledge Base Documents",
       searchMemoryPath: "Searching Memory",
       getRawMessages: "Searching Messages",
       searchRawMessages: "Searching Raw Messages",
@@ -553,6 +560,14 @@ const enUS = {
       previewHint:
         "Preview is simplified rendering. Open in WPS or PowerPoint for full effects",
       renderingNotice: "Local Preview",
+      highFidelityLoading:
+        "High-fidelity rendering is downloading in the background. Showing simplified preview for now.",
+      highFidelityLoadingToast:
+        "High-fidelity PPT rendering is loading. Using simplified preview temporarily.",
+      highFidelityReady: "High-fidelity rendering is ready",
+      highFidelityUnavailable:
+        "Only simplified preview is available right now. High-fidelity rendering is not ready yet.",
+      renderEngineCheckFailed: "Could not check high-fidelity rendering status",
       getFileInfoFailed: "Failed to get file information",
       readFileFailed: "Failed to read file",
       invalidFileFormat:
@@ -785,7 +800,7 @@ const enUS = {
     jira: "Jira",
     linear: "Linear",
     rss: "RSS",
-    feishu: "Feishu",
+    feishu: "Lark/Feishu",
     dingtalk: "DingTalk",
     qqbot: "QQ",
     weixin: "Weixin",
@@ -1869,49 +1884,49 @@ const enUS = {
     imessageDes:
       "Connect iMessage to read and send messages from your Mac (macOS only).",
     feishuDes:
-      "Connect Feishu with App ID and App Secret to chat with Alloomi via WebSocket.",
-    feishuTitle: "Connect Feishu",
+      "Connect Lark/Feishu with App ID and App Secret to chat with Alloomi via WebSocket.",
+    feishuTitle: "Connect Lark/Feishu",
     feishuDescription:
-      'Create an app in Feishu Open Platform with bot capability, choose "Use long connection to receive events" and subscribe to im.message.receive_v1, then enter your credentials below to chat with Alloomi.',
+      'Create an app in Lark/Feishu Open Platform with bot capability, choose "Use long connection to receive events" and subscribe to im.message.receive_v1, then enter your credentials below to chat with Alloomi.',
     feishuAppId: "App ID",
     feishuAppSecret: "App Secret",
     feishuDisplayName: "Display name (optional)",
-    feishuDisplayNamePlaceholder: "My Feishu",
-    feishuConnect: "Connect Feishu",
-    feishuGuide: "Go to Feishu Open Platform to create/manage bots",
-    feishuOpenPlatform: "Go to Feishu Open Platform",
-    feishuConnectSuccess: "Feishu connected",
-    feishuConnectRestartTitle: "Feishu connected",
+    feishuDisplayNamePlaceholder: "My Lark/Feishu",
+    feishuConnect: "Connect Lark/Feishu",
+    feishuGuide: "Go to Lark/Feishu Open Platform to create/manage bots",
+    feishuOpenPlatform: "Go to Lark/Feishu Open Platform",
+    feishuConnectSuccess: "Lark/Feishu connected",
+    feishuConnectRestartTitle: "Lark/Feishu connected",
     feishuConnectRestartDescTauri:
-      "To ensure Feishu message listening works reliably, please fully quit and restart the Alloomi desktop app",
+      "To ensure Lark/Feishu message listening works reliably, please fully quit and restart the Alloomi desktop app",
     feishuConnectRestartDescWeb:
-      "Refresh this page so the Feishu listener and integration state can take full effect",
+      "Refresh this page so the Lark/Feishu listener and integration state can take full effect",
     feishuConnectRestartConfirm: "OK",
     feishuAppIdSecretRequired: "Please enter App ID and App Secret",
     feishuScanDescription:
-      "Scan the QR code with Feishu or Lark on your phone and confirm the prompt.",
-    feishuScanPreparing: "Requesting QR code from Feishu…",
-    feishuScanWaiting: "Waiting for confirmation in Feishu…",
-    feishuScanDenied: "Authorization was denied in Feishu.",
+      "Scan the QR code with Lark/Feishu on your phone and confirm the prompt.",
+    feishuScanPreparing: "Requesting QR code from Lark/Feishu…",
+    feishuScanWaiting: "Waiting for confirmation in Lark/Feishu…",
+    feishuScanDenied: "Authorization was denied in Lark/Feishu.",
     feishuScanExpired: "The scan session expired. Close and try again.",
     feishuScanSessionLost: "Session is no longer valid. Close and start again.",
     feishuScanUnavailable:
-      "Scan-to-create is not available in this environment (Feishu may not expose client_secret device registration, or the request failed). You can expand manual entry.",
+      "Scan-to-create is not available in this environment (Lark/Feishu may not expose client_secret device registration, or the request failed). You can expand manual entry.",
     feishuUserCodeHint: "If you are asked for a code:",
     feishuManualEntryTitle: "Enter credentials manually",
     feishuHideManual: "Hide manual entry",
-    feishuBotDescription: "Chat with Alloomi via Feishu",
+    feishuBotDescription: "Chat with Alloomi via Lark/Feishu",
     feishuStepsLink: "Setup steps",
-    feishuStepsSection1Title: "1. Create Feishu app and get credentials",
+    feishuStepsSection1Title: "1. Create Lark/Feishu app and get credentials",
     feishuSteps1Before: "Open ",
-    feishuSteps1Link: "Feishu Open Platform",
+    feishuSteps1Link: "Lark/Feishu Open Platform",
     feishuSteps1After: " and create an enterprise app",
     feishuSteps2: 'Get App ID and App Secret under "Credentials & Basic Info"',
     feishuSteps3:
-      'Enter the App ID and App Secret above in the form and click "Connect Feishu"',
+      'Enter the App ID and App Secret above in the form and click "Connect Lark/Feishu"',
     feishuSteps4: "Restart Alloomi",
     feishuSteps5:
-      'Go back to Feishu Open Platform, enable "Bot" under "Capabilities"',
+      'Go back to Lark/Feishu Open Platform, enable "Bot" under "Capabilities"',
     feishuSteps6:
       'Under "Permissions", use "Batch import/export", paste the JSON below',
     feishuStepsNote:
@@ -3124,7 +3139,7 @@ const enUS = {
     uploadingInProgress: "Please wait for file upload to complete",
     alreadyRunning: "Please wait for the current response to complete.",
     documentUploaded:
-      "Document '{{name}}' has been added to your strategy memory",
+      "Document '{{name}}' has been added to your knowledge bases",
     documentReady: "You can now ask questions about '{{name}}'",
     imageUploadSuccess: "{{count}} images uploaded",
     unsupportedFileType:
@@ -3176,8 +3191,8 @@ const enUS = {
       "Add tracking event / file upload, or type @ for fuzzy search",
     addFile: "Add file",
     addFileHint: "Add from workspace or upload from local",
-    addFileFromWorkspace: "Add file from workspace",
-    uploadFileFromLocal: "Upload file from local",
+    addFileFromWorkspace: "Add from workspace",
+    uploadFileFromLocal: "Upload from local",
     categoryEvent: "Event",
     categoryWorkspaceFile: "Workspace file",
     categoryTask: "Action Item",
@@ -3205,6 +3220,8 @@ const enUS = {
     prompt: "What kind of assistant do you want to create?",
     askEverything: "Ask everything...",
     sendMessageFailed: "Message send failed, please retry later",
+    searchSkills: "Search skills",
+    manageSkills: "Manage",
   },
   files: {
     title: "Saved Files",
@@ -3349,6 +3366,7 @@ const enUS = {
     action: "Action",
     topics: "Topics",
     configuration: "Configuration",
+    termsAndPolicies: "Terms & Policies",
   },
   sidebar: {
     onboardingGuide: {
@@ -3366,7 +3384,7 @@ const enUS = {
         whatsapp: "WhatsApp",
         imessage: "iMessage",
         qq: "QQ",
-        feishu: "Feishu",
+        feishu: "Lark/Feishu",
         linkPlatform: "Link a platform",
         addSubscription: "Add a subscription source",
         uploadFile: "Upload a file",
@@ -3381,7 +3399,7 @@ const enUS = {
             "Connect iMessage so you can chat with Alloomi directly in iMessage.",
           connectQQ: "Connect QQ so you can chat with Alloomi directly in QQ.",
           connectFeishu:
-            "Connect Feishu so you can chat with Alloomi directly in Feishu.",
+            "Connect Lark/Feishu so you can chat with Alloomi directly in Lark/Feishu.",
           linkPlatform:
             "Connect Slack, Gmail, Telegram and more. Alloomi reads your conversations and surfaces what needs follow-up — before you have to ask.",
           addSubscription:
@@ -3492,6 +3510,7 @@ const enUS = {
       "Output is generated during execution. View all output in the Output tab.",
     noOutputYetHint: "No output yet. Run the character to see results.",
     executionHistory: "Execution History",
+    fixToSidebar: "Fix to sidebar",
     tabExecutionRuns: "Run history",
     /** Character detail tab: timeline / insight updates (UI label "Updates") */
     tabUpdates: "Updates",
@@ -3513,6 +3532,8 @@ const enUS = {
     editAvatar: "Edit Avatar",
     useTemplate: "Use Template",
     recruit: "Recruit",
+    recruitSuccess: "Added to your mates",
+    recruitFailed: "Failed to add, please try again",
     emptyStateAddFirstAssistant: "Add your first assistant",
     emptyStateCreateManuallyTitle: "Create manually",
     emptyStateCreateManuallyDescription:
@@ -3554,10 +3575,11 @@ const enUS = {
     onceDate: "One-time {{date}}",
     chat: "Chat",
     cardMenuDetail: "Character details",
-    cardMenuConfiguration: "Configuration",
+    cardMenuConfiguration: "Mate Configuration",
     dangerZone: "Danger zone",
     dangerZoneDescription: "Removing a mate from your squad cannot be undone.",
     deleteCharacter: "Remove from Squad",
+    deleteCharacterHover: "Remove this mate",
     removeFromSquadDialogTitle: "Remove from squad?",
     removeFromSquadDialogAction: "Remove",
     resume: "Resume",
@@ -3583,6 +3605,7 @@ const enUS = {
     topicsAddCustom: "Add custom",
     myStuff: "My Mates",
     calendar: "Calendar",
+    executionCalendar: "Execution Calendar",
     calendarNoEvents: "No events",
     nextExecution: "Next",
     calendarBadgeNext: "Next",
@@ -3596,6 +3619,48 @@ const enUS = {
     systemNotification: "System Notification",
     systemNotificationDescription:
       "Show desktop notifications when tasks complete",
+    dailyFocus: "Daily Focus",
+    dailyFocusLoading: "Loading...",
+    dailyFocusEmpty: "No focus data yet",
+    dailyFocusNothingMajor: "Nothing major happened today",
+    dailyFocusNoData: "No data",
+    dailyFocusAnalysisComplete: "Daily focus analysis complete",
+    dailyFocusItemsAnalyzed: "{{count}} items analyzed",
+    dailyFocusV1Summary:
+      "{{urgent}} urgent, {{important}} important, {{monitor}} monitoring",
+    dailyFocusReasoningChain: "Reasoning Chain ({{count}})",
+    dailyFocusRawContent: "Raw Content",
+    dailyFocusActionPrefix: "Action: {{label}}",
+    dailyFocusSendMessageInstruction:
+      "Help me send a message to {{recipients}}{{platformText}}: {{message}}",
+    dailyFocusSendMessagePlatformText: " via {{platform}}",
+    dailyFocusReplyEmailInstruction:
+      "Help me reply to {{recipients}}{{subjectText}}: {{message}}",
+    dailyFocusReplyEmailSubjectText: ", subject: {{subject}}",
+    dailyFocusTodayBadge: "Today",
+    dailyFocusDeadline: "Due {{deadline}}",
+    dailyFocusOverdueDeadline: "Overdue · {{deadline}}",
+    dailyFocusCollapseSection: "Collapse",
+    dailyFocusExpandSection: "Expand",
+    executionStatusRunning: "Running",
+    executionStatusSuccess: "Completed",
+    executionStatusTimeout: "Timed out",
+    executionStatusError: "Failed",
+    datePending: "Time pending",
+    noOutput: "No output for this execution",
+    taskListShowAll: "Show all",
+    taskListOnlyWithResults: "Only show items with results",
+    taskListOnlyFilesEmpty: "No tasks with file output yet",
+    addMessageChannel: "Add message channel",
+    marketplaceGroupAll: "All",
+    marketplaceGroup: {
+      office: "Office",
+      product: "Product",
+      marketing: "Marketing",
+      sales: "Sales",
+      finance: "Finance",
+      legal: "Legal",
+    },
   },
   templateCharacter: {
     aiProductIntelligence: {
@@ -3615,7 +3680,7 @@ const enUS = {
     emailMonitor: {
       name: "Email Operations Copilot",
       description:
-        'You are an email operations copilot. Execute on the configured schedule:\n\n1) Check the user\'s mailbox via Gmail/IMAP and filter by rules (sender list, keywords, sentiment).\n2) For common categories (scheduling, quotes, confirmations, unsubscribes), draft reply candidates from preset templates.\n3) Lightly tidy the inbox: tag and archive obvious newsletters/notifications.\n4) When an email involves contracts, complaints, large amounts, or strong emotion, do NOT auto-reply — push an alert to the configured Slack/Feishu channel instead.\n5) Also accept ad-hoc instructions like "reply more professionally" or "send an intro email". All outbound mail stays as a draft until the user clicks send.\n6) Save each run\'s handling list and draft suggestions as local Markdown first, then sync to Google Docs when needed.',
+        'You are an email operations copilot. Execute on the configured schedule:\n\n1) Check the user\'s mailbox via Gmail/IMAP and filter by rules (sender list, keywords, sentiment).\n2) For common categories (scheduling, quotes, confirmations, unsubscribes), draft reply candidates from preset templates.\n3) Lightly tidy the inbox: tag and archive obvious newsletters/notifications.\n4) When an email involves contracts, complaints, large amounts, or strong emotion, do NOT auto-reply — push an alert to the configured Slack/Lark/Feishu channel instead.\n5) Also accept ad-hoc instructions like "reply more professionally" or "send an intro email". All outbound mail stays as a draft until the user clicks send.\n6) Save each run\'s handling list and draft suggestions as local Markdown first, then sync to Google Docs when needed.',
       insightTitle: "Email Operations Briefing",
       insightDescription: "Periodic inbox tidying, drafted replies, and alerts",
     },
@@ -3638,14 +3703,14 @@ const enUS = {
     pdDailySync: {
       name: "Product & Dev Daily Sync",
       description:
-        'You are a product & dev sync assistant. Execute on the configured schedule: 1) Pull all commits and PR status changes from the configured GitHub repo for the day. 2) Pull Linear/Jira task status changes and new issues created today. 3) Compile a structured report (Shipped / In Progress / Blocked) and save it as local Markdown first; then email the summary and sync to Google Docs as needed. 4) On weekly-report runs, aggregate merged PRs and Linear "Done" tasks across the week, group by theme, and produce a "Weekly Delivery Summary" locally first, then sync to cloud docs and push the summary to Slack/Feishu. Never fabricate task progress.',
+        'You are a product & dev sync assistant. Execute on the configured schedule: 1) Pull all commits and PR status changes from the configured GitHub repo for the day. 2) Pull Linear/Jira task status changes and new issues created today. 3) Compile a structured report (Shipped / In Progress / Blocked) and save it as local Markdown first; then email the summary and sync to Google Docs as needed. 4) On weekly-report runs, aggregate merged PRs and Linear "Done" tasks across the week, group by theme, and produce a "Weekly Delivery Summary" locally first, then sync to cloud docs and push the summary to Slack/Lark/Feishu. Never fabricate task progress.',
       insightTitle: "Product & Dev Daily Sync",
       insightDescription: "Daily dev report and weekly delivery summary",
     },
     salesPipelineAutomation: {
       name: "Sales Pipeline Automation",
       description:
-        'You are a sales pipeline automation assistant. Execute on the configured schedule:\n\n1) Use web search to identify new target companies and contacts that match the user-provided ICP, and dedupe against the HubSpot deal pipeline.\n2) Score each lead 0–100 (company size / industry fit / trigger signal / decision-making role), with the reasoning for each component spelled out.\n3) For leads scoring ≥ 70: draft a personalized first-touch email in Gmail (kept as a draft, never auto-sent) and push the "high-priority list + one-line rec" to the configured Slack/Feishu sales channel.\n4) Move lower-scoring leads into a long-term nurture list and tag the stage in HubSpot.\n5) Log data sources and judgment for every step, and surface errors or missing data clearly for human review.',
+        'You are a sales pipeline automation assistant. Execute on the configured schedule:\n\n1) Use web search to identify new target companies and contacts that match the user-provided ICP, and dedupe against the HubSpot deal pipeline.\n2) Score each lead 0–100 (company size / industry fit / trigger signal / decision-making role), with the reasoning for each component spelled out.\n3) For leads scoring ≥ 70: draft a personalized first-touch email in Gmail (kept as a draft, never auto-sent) and push the "high-priority list + one-line rec" to the configured Slack/Lark/Feishu sales channel.\n4) Move lower-scoring leads into a long-term nurture list and tag the stage in HubSpot.\n5) Log data sources and judgment for every step, and surface errors or missing data clearly for human review.',
       insightTitle: "Sales Pipeline Automation",
       insightDescription:
         "Lead scoring, email drafts, and high-priority lead alerts",
@@ -3660,14 +3725,14 @@ const enUS = {
     scheduleManager: {
       name: "Schedule Concierge",
       description:
-        "You are a schedule concierge. Execute on the configured schedule: 1) Pull today's and tomorrow's meetings from Google/Outlook Calendar. 2) Identify conflicts, gaps, and back-to-back stretches that look unsustainable. 3) Combine with Asana/Jira tasks due today to produce a \"Today's focus + prep checklist\". 4) Send the summary to the configured Slack/Telegram/Feishu channel. If conflicts or unconfirmed key attendees are detected, flag them for the user instead of auto-rescheduling.",
+        "You are a schedule concierge. Execute on the configured schedule: 1) Pull today's and tomorrow's meetings from Google/Outlook Calendar. 2) Identify conflicts, gaps, and back-to-back stretches that look unsustainable. 3) Combine with Asana/Jira tasks due today to produce a \"Today's focus + prep checklist\". 4) Send the summary to the configured Slack/Telegram/Lark/Feishu channel. If conflicts or unconfirmed key attendees are detected, flag them for the user instead of auto-rescheduling.",
       insightTitle: "Today's Focus",
       insightDescription: "Daily calendar tidy-up and conflict alerts",
     },
     codeReviewAssistant: {
       name: "Code Review Assistant",
       description:
-        'You are a code review assistant. Execute on the configured schedule: 1) Check the configured GitHub repo\'s recent PRs and commits via web search/integration. 2) For each open PR, draft review comments covering style, potential defects, test coverage, performance, and security (drafts only; never posted to the repo automatically). 3) Bucket findings into "Must fix / Suggested / Nit". 4) For complex logic, quote the specific code snippet and explain why it matters. Send results to the configured Slack/Discord/Feishu channel.',
+        'You are a code review assistant. Execute on the configured schedule: 1) Check the configured GitHub repo\'s recent PRs and commits via web search/integration. 2) For each open PR, draft review comments covering style, potential defects, test coverage, performance, and security (drafts only; never posted to the repo automatically). 3) Bucket findings into "Must fix / Suggested / Nit". 4) For complex logic, quote the specific code snippet and explain why it matters. Send results to the configured Slack/Discord/Lark/Feishu channel.',
       insightTitle: "Code Review Suggestions",
       insightDescription: "Periodic PR review with improvement notes",
     },
@@ -3681,21 +3746,21 @@ const enUS = {
     socialMediaPlanner: {
       name: "Social Media Planner",
       description:
-        'You are a social media content planner. Execute on the configured schedule: 1) Combine the brand persona, recent product updates, and this week\'s marketing themes. 2) Produce 1–3 candidate posts each for X/Twitter and Instagram (with hashtags, image suggestions, and best-time-to-post window). 3) Tag each candidate with its goal (acquisition / engagement / conversion). 4) Push everything to the configured Slack/Feishu channel as "pending approval" — never auto-publish.',
+        'You are a social media content planner. Execute on the configured schedule: 1) Combine the brand persona, recent product updates, and this week\'s marketing themes. 2) Produce 1–3 candidate posts each for X/Twitter and Instagram (with hashtags, image suggestions, and best-time-to-post window). 3) Tag each candidate with its goal (acquisition / engagement / conversion). 4) Push everything to the configured Slack/Lark/Feishu channel as "pending approval" — never auto-publish.',
       insightTitle: "Today's Social Plan",
       insightDescription: "Daily multi-platform social content drafts",
     },
     brandReputationMonitor: {
       name: "Brand Reputation Sentinel",
       description:
-        'You are a brand reputation sentinel. Execute on the configured schedule: 1) Sweep the configured brand names, product names, and CEO/founder names across news, blogs, Reddit, HackerNews, and niche forums via web search + RSS. 2) Pull related tweets, mentions, and DMs from X/Twitter. 3) Score each item by sentiment (positive / neutral / negative) and reach (account followers / source authority); dedupe against URLs already processed. 4) Only when a hit is "negative + meaningful reach" or "positive but high viral potential", push an alert to Slack/Feishu with a summary, source links, and a suggested response angle.',
+        'You are a brand reputation sentinel. Execute on the configured schedule: 1) Sweep the configured brand names, product names, and CEO/founder names across news, blogs, Reddit, HackerNews, and niche forums via web search + RSS. 2) Pull related tweets, mentions, and DMs from X/Twitter. 3) Score each item by sentiment (positive / neutral / negative) and reach (account followers / source authority); dedupe against URLs already processed. 4) Only when a hit is "negative + meaningful reach" or "positive but high viral potential", push an alert to Slack/Lark/Feishu with a summary, source links, and a suggested response angle.',
       insightTitle: "Brand Reputation Alerts",
       insightDescription: "Cross-platform brand mentions and sentiment watch",
     },
     customerFollowup: {
       name: "Customer Follow-up Assistant",
       description:
-        "You are a customer follow-up assistant. Execute on the configured schedule: 1) Pull HubSpot deal pipeline plus recent email correspondence and find customers who've blown past their SLA or are stuck in a stage too long. 2) Combine the prior conversation with RAG-stored product material to draft a personalized email and a short IM script per customer. 3) Mark each customer's priority and the suggested timing for outreach. 4) Push the list to the configured Slack/Feishu channel for the user to review before sending from their inbox.",
+        "You are a customer follow-up assistant. Execute on the configured schedule: 1) Pull HubSpot deal pipeline plus recent email correspondence and find customers who've blown past their SLA or are stuck in a stage too long. 2) Combine the prior conversation with RAG-stored product material to draft a personalized email and a short IM script per customer. 3) Mark each customer's priority and the suggested timing for outreach. 4) Push the list to the configured Slack/Lark/Feishu channel for the user to review before sending from their inbox.",
       insightTitle: "Follow-up Worklist",
       insightDescription: "Daily list of customers to follow up with",
     },
@@ -3709,7 +3774,7 @@ const enUS = {
     complianceReview: {
       name: "Compliance Review Assistant",
       description:
-        'You are a compliance review assistant. Execute on the configured schedule: 1) Track regulatory updates, official notices, and industry codes relevant to the user\'s business via web search + RSS (in both English and Chinese). 2) Diff the latest texts against compliance handbooks and SOPs uploaded to the knowledge base. 3) Identify newly emerging risks and grade them "Fix now / Track / Watch". 4) For each risk, list the impacted department, a draft remediation plan, and the source citation. 5) Write the report as local Markdown first, then push the summary to Slack/Feishu and sync to Google Docs only when needed. ⚠️ Assists identification and bookkeeping only — does not constitute legal advice.',
+        'You are a compliance review assistant. Execute on the configured schedule: 1) Track regulatory updates, official notices, and industry codes relevant to the user\'s business via web search + RSS (in both English and Chinese). 2) Diff the latest texts against compliance handbooks and SOPs uploaded to the knowledge base. 3) Identify newly emerging risks and grade them "Fix now / Track / Watch". 4) For each risk, list the impacted department, a draft remediation plan, and the source citation. 5) Write the report as local Markdown first, then push the summary to Slack/Lark/Feishu and sync to Google Docs only when needed. ⚠️ Assists identification and bookkeeping only — does not constitute legal advice.',
       insightTitle: "Compliance Risk Daily",
       insightDescription:
         "Regulatory tracking, risk scanning, and remediation tips",
@@ -3717,21 +3782,21 @@ const enUS = {
     techFieldMonitor: {
       name: "Tech Field Sentinel",
       description:
-        'You are a tech field sentinel. Execute on the configured schedule: 1) Track the user\'s chosen technical areas (LLMs / Agents / databases, etc.) via web search and RSS across arXiv, HackerNews, technical blogs, and industry newsletters. 2) Cluster noteworthy items by claim / method / dataset. 3) For each cluster, surface 3–5 highest-signal sources (with links), a one-line takeaway, and a "so what". 4) Maintain an incremental list of people/teams worth following. 5) Generate the weekly digest as a local single-file HTML report using @skills/frontend-design, then sync to Google Docs only when needed, and push summary to Slack/Feishu.',
+        'You are a tech field sentinel. Execute on the configured schedule: 1) Track the user\'s chosen technical areas (LLMs / Agents / databases, etc.) via web search and RSS across arXiv, HackerNews, technical blogs, and industry newsletters. 2) Cluster noteworthy items by claim / method / dataset. 3) For each cluster, surface 3–5 highest-signal sources (with links), a one-line takeaway, and a "so what". 4) Maintain an incremental list of people/teams worth following. 5) Generate the weekly digest as a local single-file HTML report using @skills/frontend-design, then sync to Google Docs only when needed, and push summary to Slack/Lark/Feishu.',
       insightTitle: "Tech Field Weekly",
       insightDescription: "Topic-clustered, high-signal tech tracking",
     },
     competitorMention: {
       name: "Competitor Mention Monitor",
       description:
-        "You are a competitor mention monitor. Execute on the configured schedule: 1) Web-search the configured competitor names, product aliases, and CEO names across news, blogs, communities, and X/Twitter. 2) Dedupe against URLs already pushed. 3) Score by relevance and reach; keep only the top 5–10 high-value items. 4) For each, give a quick summary, source, and an angle the team could engage with. 5) Save the brief as local Markdown and push to the configured Slack/Feishu channel; sync to Google Docs only when needed. Never post in external communities on the user's behalf.",
+        "You are a competitor mention monitor. Execute on the configured schedule: 1) Web-search the configured competitor names, product aliases, and CEO names across news, blogs, communities, and X/Twitter. 2) Dedupe against URLs already pushed. 3) Score by relevance and reach; keep only the top 5–10 high-value items. 4) For each, give a quick summary, source, and an angle the team could engage with. 5) Save the brief as local Markdown and push to the configured Slack/Lark/Feishu channel; sync to Google Docs only when needed. Never post in external communities on the user's behalf.",
       insightTitle: "Competitor Mention Brief",
       insightDescription: "Deduped competitor mentions with engagement angles",
     },
     whatsappFrontline: {
       name: "WhatsApp Frontline Responder",
       description:
-        'You are a WhatsApp frontline responder. Execute on the configured schedule: 1) Check new WhatsApp messages. 2) Match them against the RAG knowledge base (FAQs, product info, return/refund policy) and, when confidence ≥ 80%, draft a reply that cites the supporting sources. 3) Escalate when money, contracts, complaints, sensitive emotion, or low confidence are involved — send the conversation context, retrieval trace, and your tentative call to the configured "escalation" Slack/Feishu channel for a human to take over. 4) Log every auto-reply and escalation event for traceability. Keep logs in local Markdown first, then sync to cloud docs when necessary.',
+        'You are a WhatsApp frontline responder. Execute on the configured schedule: 1) Check new WhatsApp messages. 2) Match them against the RAG knowledge base (FAQs, product info, return/refund policy) and, when confidence ≥ 80%, draft a reply that cites the supporting sources. 3) Escalate when money, contracts, complaints, sensitive emotion, or low confidence are involved — send the conversation context, retrieval trace, and your tentative call to the configured "escalation" Slack/Lark/Feishu channel for a human to take over. 4) Log every auto-reply and escalation event for traceability. Keep logs in local Markdown first, then sync to cloud docs when necessary.',
       insightTitle: "WhatsApp Support Log",
       insightDescription: "WhatsApp auto-reply with human escalation trail",
     },
@@ -3795,7 +3860,7 @@ const enUS = {
     imKnowledgeSupport: {
       name: "IM Knowledge-Base Support",
       description:
-        "You are an IM knowledge-base support agent. Execute on the configured schedule: 1) Listen to the configured Slack / Discord / Telegram / Feishu channels (one or many). 2) Match new questions against the RAG knowledge base (product FAQ, SOPs, past Q&A). 3) When confidence ≥ 80%, answer directly and cite the source paragraph and document name; when confidence is low, do not guess — @ the configured escalation owner with the question, retrieval trace, and your tentative read. 4) Always escalate to a human for actions involving accounts, orders, contracts, or refunds. 5) Log every interaction so the knowledge base can be improved over time. Keep logs in local Markdown first and sync to cloud docs only when required.",
+        "You are an IM knowledge-base support agent. Execute on the configured schedule: 1) Listen to the configured Slack / Discord / Telegram / Lark/Feishu channels (one or many). 2) Match new questions against the RAG knowledge base (product FAQ, SOPs, past Q&A). 3) When confidence ≥ 80%, answer directly and cite the source paragraph and document name; when confidence is low, do not guess — @ the configured escalation owner with the question, retrieval trace, and your tentative read. 4) Always escalate to a human for actions involving accounts, orders, contracts, or refunds. 5) Log every interaction so the knowledge base can be improved over time. Keep logs in local Markdown first and sync to cloud docs only when required.",
       insightTitle: "IM Support Log",
       insightDescription:
         "Knowledge-base auto-replies and escalations across IM channels",
@@ -4241,6 +4306,8 @@ const enUS = {
         emptyFilesHint: "Chat with Alloomi to generate some files",
         noSkills: "No skills installed",
         skillsHint: "Add skills to ~/.alloomi/skills/",
+        searchSkills: "Search skills",
+        searchSkillsPlaceholder: "Search skills",
         skillAuthor: "By",
         skillUsage: "Usage",
         sort: "Sort",
@@ -4541,7 +4608,7 @@ const enUS = {
     freePlanDescription: "Get started with focus",
     freePlanIncludes: "Includes:",
     freePlanCredits: "30,000 credits / month",
-    freePlanHistory: "3-day history retention",
+    freePlanHistory: "30-day history retention",
     freePlanUnderstanding: "Basic message understanding",
     freePlanConversations: "AI summaries & replies",
     freePlanIntegrations: "Multi-platform connections",
@@ -4553,7 +4620,7 @@ const enUS = {
     basicPlanDescription: "For individuals who want focus",
     basicPlanIncludes: "Everything in Free:",
     basicPlanCredits: "500,000 credits / month",
-    basicPlanHistory: "30-day history retention",
+    basicPlanHistory: "60-day history retention",
     basicPlanUnderstanding: "Stronger AI message understanding",
     basicPlanLearning: "Weekly auto-learning updates",
     basicPlanStorage: "2 TB encrypted storage",
@@ -4565,7 +4632,7 @@ const enUS = {
     proPlanDescription: "Most Popular for Founders",
     proPlanIncludes: "Everything in Basic:",
     proPlanCredits: "1,500,000 credits / month",
-    proPlanHistory: "90-day memory retention",
+    proPlanHistory: "120-day memory retention",
     proPlanConversations: "Advanced AI conversations",
     proPlanLearning: "Daily auto-learning updates",
     proPlanIntegrations: "Priority access to new integrations",
@@ -4592,7 +4659,7 @@ const enUS = {
     },
     featureBlocks: {
       free: {
-        history: "History retention: 3 days",
+        history: "History retention: 30 days",
         aiConversations: "Basic AI conversations",
         messageUnderstanding: "Message understanding included",
         messageReplies: "Message replies included",
@@ -4604,7 +4671,7 @@ const enUS = {
         unavailable: ["Auto-learning", "Cloud storage & uploads", "Top-ups"],
       },
       basic: {
-        history: "History retention: 30 days",
+        history: "History retention: 60 days",
         aiConversations: "Basic AI conversations",
         messageUnderstanding: "AI-powered message understanding",
         messageReplies: "Message replies included",
@@ -4616,7 +4683,7 @@ const enUS = {
         support: "Community + email support (24h response)",
       },
       pro: {
-        history: "History retention: 90 days",
+        history: "History retention: 120 days",
         aiConversations: "Advanced AI conversations",
         messageUnderstanding: "Enhanced AI message understanding",
         messageReplies: "Message replies included",
@@ -4629,7 +4696,7 @@ const enUS = {
         support: "Priority email support (12h response) + Alpha access",
       },
       team: {
-        history: "History retention: 90 days",
+        history: "History retention: 120 days",
         aiConversations: "Advanced AI conversations",
         messageUnderstanding: "Enhanced AI message understanding",
         messageReplies: "Message replies included",
@@ -5741,7 +5808,7 @@ const enUS = {
         },
         firstChat: {
           title: "Chat with Alloomi via messaging apps",
-          desc: "Not just in the app —\nchat with Alloomi directly via Telegram, QQ, Feishu, iMessage, WhatsApp.\nAsk questions, track updates, get things done anywhere.",
+          desc: "Not just in the app —\nchat with Alloomi directly via Telegram, QQ, Lark/Feishu, iMessage, WhatsApp.\nAsk questions, track updates, get things done anywhere.",
           guideTitle: "Chat with Alloomi via messaging apps",
           learnMoreLink: "Learn how to connect →",
           bullet1: "Send messages to Alloomi in your connected messaging app",
@@ -5809,7 +5876,7 @@ const enUS = {
     previewHint: "Move your mouse to see the avatar follow your gaze",
     showBorder: "Container Border",
     showBorderDesc: "Stroke along the current silhouette",
-    colorPresets: "Color Presets",
+    colorPresets: "Avatar Color",
     shapePresets: "Silhouette",
     shapes: {
       circle: "Circle",
@@ -5838,6 +5905,15 @@ const enUS = {
     tabs: {
       head: "Aura & Head",
       face: "Face Features",
+      editor: "Avatar Editor",
+      upload: "Custom Upload",
+    },
+    upload: {
+      title: "Upload a Custom Avatar Image",
+      cta: "Click to Choose an Image",
+      hint: "Supports PNG/JPG/WEBP/GIF",
+      previewAlt: "Custom avatar preview",
+      clear: "Remove Custom Image",
     },
     features: {
       eyes: "Eyes",
