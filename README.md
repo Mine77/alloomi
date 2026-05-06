@@ -6,7 +6,7 @@
 
 <br>
 
-**Your work has context. Your AI doesn't.**
+**Your work has context. Now your AI does too.**
 
 <br>
 
