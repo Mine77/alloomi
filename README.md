@@ -37,6 +37,9 @@ Your work happens across Telegram, Slack, Gmail, Calendar, Jira, Notion, and a d
 
 Your AI tool knows none of this. Every session starts from zero. You spend the first five minutes explaining what should already be obvious.
 
+
+
+
 ## Features
 
 | | Capability | What it does |
@@ -51,8 +54,12 @@ Your AI tool knows none of this. Every session starts from zero. You spend the f
 | 🖥️ | **Desktop App** | Native app for Windows, macOS, Linux via Tauri — local-first storage with IndexedDB + SQLite, AES-256 encryption, no data leaves your machine |
 | 🌐 | **Web Search** | Brave Search integration for real-time web and news queries when the agent needs current information |
 
+<p align="center">
+  <img src="screenshots/components.png" alt="Architecture" width="100%">
+</p>
 
-## Quick start
+
+## Quick Start
 
 ```bash
 git clone https://github.com/melandlabs/alloomi.git
@@ -70,7 +77,7 @@ pnpm tauri:dev
 
 Requires Node.js 22+ and pnpm 9+.
 
-## What's inside
+## Project Structure
 
 ```
 alloomi/
@@ -84,14 +91,6 @@ alloomi/
 │   └── search/        # Brave Search integration
 └── skills/            # PDF, DOCX, XLSX, PPTX, browser automation, web search
 ```
-
-## Architecture
-
-<p align="center">
-  <img src="screenshots/components.png" alt="Architecture" width="100%">
-</p>
-
-Signals flow in from your connected platforms → get scored and classified into insights → stored in tiered memory → surfaced through a prioritized inbox → acted on by the AI agent.
 
 ## Screenshots
 
