@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
 
-const API_BASE = 'http://localhost:3415';
+const PORTS = [3515, 3415, 3414]; // dev, local fallback, prod
 const MEMORY_DIR = path.join(os.homedir(), '.alloomi', 'data', 'memory');
 const TOKEN_PATH = path.join(os.homedir(), '.alloomi', 'token');
 
@@ -19,9 +19,15 @@ function getAuthToken() {
   }
 }
 
-function apiRequest(endpoint, method = 'GET', body = null) {
+function apiRequest(endpoint, method = 'GET', body = null, portIndex = 0) {
   return new Promise((resolve, reject) => {
-    const url = new URL(endpoint, API_BASE);
+    if (portIndex >= PORTS.length) {
+      reject(new Error('Alloomi server not running. Tried ports: ' + PORTS.join(', ')));
+      return;
+    }
+
+    const port = PORTS[portIndex];
+    const url = new URL(endpoint, `http://localhost:${port}`);
     const token = getAuthToken();
 
     const options = {
@@ -39,6 +45,25 @@ function apiRequest(endpoint, method = 'GET', body = null) {
       let data = '';
       res.on('data', chunk => data += chunk);
       res.on('end', () => {
+        // Check for auth errors on RAG endpoints (401 in body or status)
+        let authError = null;
+        try {
+          const json = JSON.parse(data);
+          if (json.error?.message?.includes('401') || json.error?.code === 401) {
+            authError = json.error.message;
+          }
+        } catch {}
+
+        if ((res.statusCode === 401 || res.statusCode === 403 || res.statusCode === 500) && authError) {
+          if (endpoint.includes('/api/rag/') || endpoint.includes('/api/insights')) {
+            const isRag = endpoint.includes('/api/rag/');
+            const hint = isRag
+              ? '\n\nHint: search-knowledge requires Embeddings API authentication.\nYou may need to:\n1. Login via web browser to get cookie auth\n2. Or configure EMBEDDINGS_API_KEY in your Alloomi settings'
+              : '\n\nHint: This endpoint requires authentication. Ensure you are logged in.';
+            reject(new Error(`${authError}${hint}`));
+            return;
+          }
+        }
         try {
           const json = JSON.parse(data);
           resolve(json);
@@ -48,7 +73,10 @@ function apiRequest(endpoint, method = 'GET', body = null) {
       });
     });
 
-    req.on('error', reject);
+    req.on('error', () => {
+      // Try next port on connection error
+      apiRequest(endpoint, method, body, portIndex + 1).then(resolve).catch(reject);
+    });
     if (body) req.write(JSON.stringify(body));
     req.end();
   });

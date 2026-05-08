@@ -5,7 +5,7 @@ const path = require('node:path');
 const os = require('node:os');
 const { execSync } = require('node:child_process');
 
-const API_BASE = 'http://localhost:3415';
+const PORTS = [3515, 3415, 3414]; // dev, local fallback, prod
 const TOKEN_PATH = path.join(os.homedir(), '.alloomi', 'token');
 
 // Platform definitions matching connector-target.ts
@@ -64,9 +64,15 @@ function getAuthToken() {
   }
 }
 
-function apiRequest(endpoint, method = 'GET', body = null) {
+function apiRequest(endpoint, method = 'GET', body = null, portIndex = 0) {
   return new Promise((resolve, reject) => {
-    const url = new URL(endpoint, API_BASE);
+    if (portIndex >= PORTS.length) {
+      reject(new Error('Alloomi server not running. Tried ports: ' + PORTS.join(', ')));
+      return;
+    }
+
+    const port = PORTS[portIndex];
+    const url = new URL(endpoint, `http://localhost:${port}`);
     const token = getAuthToken();
 
     const options = {
@@ -93,7 +99,10 @@ function apiRequest(endpoint, method = 'GET', body = null) {
       });
     });
 
-    req.on('error', reject);
+    req.on('error', () => {
+      // Try next port on connection error
+      apiRequest(endpoint, method, body, portIndex + 1).then(resolve).catch(reject);
+    });
     if (body) req.write(JSON.stringify(body));
     req.end();
   });
