@@ -154,12 +154,43 @@ async function deleteInsight(id) {
   return apiRequest(`/api/insights/${id}`, 'DELETE');
 }
 
+async function searchAll(query) {
+  const [memoryResult, knowledgeResult, insightsResult] = await Promise.allSettled([
+    searchMemory(query),
+    searchKnowledge(query, 5).catch(() => ({ results: [], error: 'Knowledge base unavailable' })),
+    listInsights(30, 20).catch(() => ({ insights: [], error: 'Insights unavailable' }))
+  ]);
+
+  return {
+    memory: {
+      source: 'local files',
+      ...(memoryResult.status === 'fulfilled' ? memoryResult.value : { results: [], error: memoryResult.reason?.message })
+    },
+    knowledge: {
+      source: 'knowledge base (RAG)',
+      ...(knowledgeResult.status === 'fulfilled' ? knowledgeResult.value : { results: [], error: 'Unavailable' })
+    },
+    insights: {
+      source: 'extracted insights',
+      ...(insightsResult.status === 'fulfilled' ? insightsResult.value : { insights: [], error: 'Unavailable' })
+    }
+  };
+}
+
 const command = process.argv[2];
 const args = process.argv.slice(3);
 
 async function main() {
   try {
     switch (command) {
+      case 'search-all': {
+        const query = args[0];
+        if (!query) throw new Error('Query required: search-all <query>');
+        const result = await searchAll(query);
+        console.log(JSON.stringify(result, null, 2));
+        break;
+      }
+
       case 'search-memory': {
         const query = args[0];
         if (!query) throw new Error('Query required: search-memory <query>');
@@ -239,6 +270,7 @@ async function main() {
           error: 'Unknown command',
           usage: `
 Commands:
+  search-all <query>                               Search all memory sources at once
   search-memory <query> [--directory=<subdir>]    Search local memory files
   search-knowledge <query> [--limit=5]             Search knowledge base (RAG)
   list-documents [--limit=50]                      List knowledge base documents

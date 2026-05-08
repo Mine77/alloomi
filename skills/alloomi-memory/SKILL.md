@@ -284,6 +284,9 @@ curl "http://localhost:3415/api/chat-insights?chatId=chat_xxx" \
 ### Quick Start
 
 ```bash
+# Search ALL memory sources at once (recommended for comprehensive search)
+node $SKILL_DIR/scripts/alloomi-memory.cjs search-all "query"
+
 # Search local memory files (full-text, case-insensitive)
 node $SKILL_DIR/scripts/alloomi-memory.cjs search-memory "boss"
 
@@ -309,19 +312,47 @@ node $SKILL_DIR/scripts/alloomi-memory.cjs get-insight insight_xxx
 node $SKILL_DIR/scripts/alloomi-memory.cjs delete-insight insight_xxx
 ```
 
+### Command Reference
+
+| Command | Description | Target |
+|---------|-------------|--------|
+| `search-all` | Search **all** memory sources simultaneously | Local files + Knowledge base + Insights |
+| `search-memory` | Full-text search in local `.md`/`.json` files | `~/.alloomi/data/memory/` |
+| `search-knowledge` | Semantic search via embeddings | Alloomi server (RAG) |
+| `list-documents` | List uploaded documents | Knowledge base |
+| `get-document` | Get document content by ID | Knowledge base |
+| `list-insights` | List extracted insights | Insights API |
+| `get-insight` | Get single insight by ID | Insights API |
+| `delete-insight` | Delete an insight | Insights API |
+
 ---
 
 ## AI Agent Workflow
 
-Triggered when the user asks about:
+Triggered when the user asks about memory, knowledge, or past information:
 
 1. Memory file search - "search my memory", "find what I said about..."
 2. Knowledge base search - "search uploaded documents", "find in knowledge base"
 3. Insights management - "list insights", "delete an insight"
+4. **Comprehensive search** - "search everything", "find in all my memory", "build relationship graph"
 
 **Execution Flow:**
 
-1. **Identify intent** - memory files / knowledge base / insights
-2. **Choose command** - see command table above
-3. **Execute** - use Bash tool
-4. **Format output** - report results naturally in user's language
+1. **Identify intent** - determine if user wants comprehensive search or specific source
+2. **Prefer `search-all`** - for general memory queries, always use `search-all` first to get comprehensive results across all sources
+3. **Execute in parallel** - when specific sources are needed, run multiple searches simultaneously:
+   - `search-memory` for local files
+   - `search-knowledge` for uploaded documents
+   - `list-insights` for extracted insights
+4. **Format output** - aggregate and present results in user's language
+
+**Best Practice for Comprehensive Queries:**
+
+```bash
+# When user asks about relationships, people, or general memory:
+node $SKILL_DIR/scripts/alloomi-memory.cjs search-all "person/project/topic"
+
+# Then optionally get details from specific sources
+node $SKILL_DIR/scripts/alloomi-memory.cjs search-memory "person" --directory=people
+node $SKILL_DIR/scripts/alloomi-memory.cjs list-insights --days=30
+```
