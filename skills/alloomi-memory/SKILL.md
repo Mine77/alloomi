@@ -194,7 +194,7 @@ curl http://localhost:3415/api/rag/documents/doc_xxx \
 
 ### Insights
 
-Insights are structured information extracted from chat history, such as key decisions, action items, and relationship notes.
+Insights are structured information extracted from chat history, such as key decisions, action items, and relationship notes. Each insight belongs to one or more **groups** (channels/platforms) like `gmail`, `telegram`, `whatsapp`, `slack`, `discord`, `linkedin`, `twitter`, etc.
 
 #### GET `/api/insights` - List Insights
 List all insights from a time period.
@@ -208,21 +208,35 @@ curl "http://localhost:3415/api/insights?days=7&limit=50" \
 - `days` (number, default 7) - Look back period in days
 - `limit` (number, default 50) - Max results to return
 
-**Response:**
+**Insight Structure:**
+Each insight contains a `groups` field—an array of channel identifiers indicating which platform(s) the insight came from:
+
 ```json
 {
-  "insights": [
-    {
-      "id": "insight_xxx",
-      "chatId": "chat_xxx",
-      "type": "decision",
-      "content": "User decided to start new project next month",
-      "createdAt": "2024-01-01T00:00:00Z"
-    }
-  ],
-  "total": 5
+  "id": "insight_xxx",
+  "chatId": "chat_xxx",
+  "type": "decision",
+  "content": "John sent an email about the project deadline",
+  "groups": ["gmail"],
+  "people": ["John"],
+  "time": "2024-01-01T00:00:00Z",
+  "createdAt": "2024-01-01T00:00:00Z"
 }
 ```
+
+**Common Channel Groups:**
+| Channel | Group Value | Description |
+|---------|-------------|-------------|
+| Gmail | `"gmail"` | Google Mail messages |
+| Outlook | `"outlook"` | Microsoft Outlook emails |
+| Telegram | `"telegram"` | Telegram chats |
+| WhatsApp | `"whatsapp"` | WhatsApp messages |
+| Slack | `"slack"` | Slack messages |
+| Discord | `"discord"` | Discord messages |
+| LinkedIn | `"linkedin"` | LinkedIn messages |
+| Twitter/X | `"twitter"` | Twitter posts |
+| WeChat | `"weixin"` | WeChat messages |
+| RSS | `"rss"` | RSS feed items |
 
 ---
 
@@ -305,6 +319,11 @@ node $SKILL_DIR/scripts/alloomi-memory.cjs get-document doc_xxx
 # List recent insights (last 7 days)
 node $SKILL_DIR/scripts/alloomi-memory.cjs list-insights --days=7
 
+# List insights from a specific channel (e.g., Gmail, Telegram, WhatsApp)
+node $SKILL_DIR/scripts/alloomi-memory.cjs list-insights --channel=gmail --days=7
+node $SKILL_DIR/scripts/alloomi-memory.cjs list-insights --channel=telegram --days=30
+node $SKILL_DIR/scripts/alloomi-memory.cjs list-insights --channel=whatsapp
+
 # Get single insight
 node $SKILL_DIR/scripts/alloomi-memory.cjs get-insight insight_xxx
 
@@ -321,7 +340,7 @@ node $SKILL_DIR/scripts/alloomi-memory.cjs delete-insight insight_xxx
 | `search-knowledge` | Semantic search via embeddings | Alloomi server (RAG) |
 | `list-documents` | List uploaded documents | Knowledge base |
 | `get-document` | Get document content by ID | Knowledge base |
-| `list-insights` | List extracted insights | Insights API |
+| `list-insights` | List extracted insights (supports `--channel` filter) | Insights API |
 | `get-insight` | Get single insight by ID | Insights API |
 | `delete-insight` | Delete an insight | Insights API |
 
@@ -334,7 +353,8 @@ Triggered when the user asks about memory, knowledge, or past information:
 1. Memory file search - "search my memory", "find what I said about..."
 2. Knowledge base search - "search uploaded documents", "find in knowledge base"
 3. Insights management - "list insights", "delete an insight"
-4. **Comprehensive search** - "search everything", "find in all my memory", "build relationship graph"
+4. **Channel insights** - "what messages on Gmail?", "show me Telegram chats", "any WhatsApp messages?"
+5. **Comprehensive search** - "search everything", "find in all my memory", "build relationship graph"
 
 **Execution Flow:**
 
@@ -344,7 +364,18 @@ Triggered when the user asks about memory, knowledge, or past information:
    - `search-memory` for local files
    - `search-knowledge` for uploaded documents
    - `list-insights` for extracted insights
-4. **Format output** - aggregate and present results in user's language
+4. **For channel queries** - use `list-insights` with `--channel` parameter:
+   - `"gmail"` - Email messages via Gmail
+   - `"outlook"` - Email messages via Outlook
+   - `"telegram"` - Telegram chats
+   - `"whatsapp"` - WhatsApp messages
+   - `"slack"` - Slack messages
+   - `"discord"` - Discord messages
+   - `"linkedin"` - LinkedIn messages
+   - `"twitter"` - Twitter/X posts
+   - `"weixin"` - WeChat messages
+   - `"rss"` - RSS feed items
+5. **Format output** - aggregate and present results in user's language
 
 **Best Practice for Comprehensive Queries:**
 
@@ -355,4 +386,17 @@ node $SKILL_DIR/scripts/alloomi-memory.cjs search-all "person/project/topic"
 # Then optionally get details from specific sources
 node $SKILL_DIR/scripts/alloomi-memory.cjs search-memory "person" --directory=people
 node $SKILL_DIR/scripts/alloomi-memory.cjs list-insights --days=30
+```
+
+**Channel-Based Message Queries:**
+
+```bash
+# User asks "what emails did I receive?" or "show me Gmail messages"
+node $SKILL_DIR/scripts/alloomi-memory.cjs list-insights --channel=gmail --days=7
+
+# User asks "any Telegram messages about project X"?
+node $SKILL_DIR/scripts/alloomi-memory.cjs list-insights --channel=telegram --days=30
+
+# User asks "recent WhatsApp messages"?
+node $SKILL_DIR/scripts/alloomi-memory.cjs list-insights --channel=whatsapp
 ```

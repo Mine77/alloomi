@@ -142,8 +142,17 @@ async function getDocument(id) {
   return apiRequest(`/api/rag/documents/${id}`);
 }
 
-async function listInsights(days = 7, limit = 50) {
-  return apiRequest(`/api/insights?days=${days}&limit=${limit}`);
+async function listInsights(days = 7, limit = 50, channel = null) {
+  const data = await apiRequest(`/api/insights?days=${days}&limit=${limit}`);
+  // Filter by channel if specified (check both groups array and platform field)
+  if (channel && data.items) {
+    data.items = data.items.filter(insight =>
+      (insight.groups && insight.groups.includes(channel)) ||
+      insight.platform === channel
+    );
+    data.total = data.items.length;
+  }
+  return data;
 }
 
 async function getInsight(id) {
@@ -238,13 +247,15 @@ async function main() {
       case 'list-insights': {
         let days = 7;
         let limit = 50;
+        let channel = null;
 
         for (const arg of args) {
           if (arg.startsWith('--days=')) days = Number.parseInt(arg.split('=')[1]);
           if (arg.startsWith('--limit=')) limit = Number.parseInt(arg.split('=')[1]);
+          if (arg.startsWith('--channel=')) channel = arg.split('=')[1];
         }
 
-        const result = await listInsights(days, limit);
+        const result = await listInsights(days, limit, channel);
         console.log(JSON.stringify(result, null, 2));
         break;
       }
@@ -270,14 +281,21 @@ async function main() {
           error: 'Unknown command',
           usage: `
 Commands:
-  search-all <query>                               Search all memory sources at once
-  search-memory <query> [--directory=<subdir>]    Search local memory files
-  search-knowledge <query> [--limit=5]             Search knowledge base (RAG)
-  list-documents [--limit=50]                      List knowledge base documents
-  get-document <id>                                Get document content
-  list-insights [--days=7] [--limit=50]           List recent insights
-  get-insight <id>                                 Get single insight
-  delete-insight <id>                              Delete an insight
+  search-all <query>                                              Search all memory sources at once
+  search-memory <query> [--directory=<subdir>]                     Search local memory files
+  search-knowledge <query> [--limit=5]                              Search knowledge base (RAG)
+  list-documents [--limit=50]                                       List knowledge base documents
+  get-document <id>                                                 Get document content
+  list-insights [--days=7] [--limit=50] [--channel=<channel>]     List recent insights (optionally filtered by channel)
+  get-insight <id>                                                  Get single insight
+  delete-insight <id>                                               Delete an insight
+
+Channels: gmail, outlook, telegram, whatsapp, slack, discord, linkedin, twitter, weixin, rss
+
+Examples:
+  list-insights --days=7 --limit=50                    # Get recent insights
+  list-insights --channel=gmail --days=7               # Get Gmail insights from last 7 days
+  list-insights --channel=telegram --days=30           # Get Telegram insights from last 30 days
           `.trim()
         }, null, 2));
     }
