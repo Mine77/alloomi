@@ -203,6 +203,32 @@ Aliases are case-insensitive and support both English and Chinese:
 
 ---
 
+## Desktop UI
+
+Users can also authorize accounts directly through the Alloomi desktop application without using CLI commands.
+
+### Adding Account Authorization via Desktop UI
+
+1. **Open Alloomi desktop app** on your computer
+2. **Navigate to Settings** (gear icon in the sidebar or top-right menu)
+3. **Go to Integrations** tab/section
+4. **Click on the platform** you want to connect (e.g., Telegram, Slack, Discord, Gmail, etc.)
+5. **Follow the platform-specific authorization flow:**
+   - **OAuth platforms** (Slack, Discord, X/Twitter): Click "Connect" → you'll be redirected to the platform's authorization page in your browser → Approve the permissions → you'll be redirected back
+   - **App Password platforms** (Gmail, Outlook): Enter your email and app password
+   - **App Credentials platforms** (DingTalk, Feishu, QQ): Enter your appId and appSecret
+   - **QR/Interactive platforms** (WhatsApp, Telegram, iMessage): Scan the QR code or follow the in-app instructions
+
+6. **Verify connection** — once authorized, the platform will show as "Connected" with a green checkmark
+
+### Managing Connected Accounts
+
+- **List connected accounts**: Settings → Integrations → shows all connected platforms with status
+- **Disconnect account**: Settings → Integrations → click on connected platform → "Disconnect" or remove
+- **Check status**: Connected platforms show green "Active" badge; expired/disconnected shows red "Inactive" badge
+
+---
+
 ## CLI Script
 
 ### Quick Start
