@@ -91,7 +91,7 @@ async function searchMemory(query, directory = null) {
     return { results: [], message: `Directory not found: ${searchDir}` };
   }
 
-  const queryLower = query.toLowerCase();
+  const queryLower = query ? query.toLowerCase() : null;
   const results = [];
 
   function searchDirRecursive(dir, depth = 0) {
@@ -108,15 +108,27 @@ async function searchMemory(query, directory = null) {
           const content = fs.readFileSync(fullPath, 'utf8');
           const lines = content.split('\n');
 
-          for (let i = 0; i < lines.length; i++) {
-            if (lines[i].toLowerCase().includes(queryLower)) {
-              const relPath = path.relative(MEMORY_DIR, fullPath);
-              results.push({
-                file: relPath,
-                line: i + 1,
-                preview: lines[i].trim().substring(0, 200)
-              });
-              break;
+          if (queryLower === null) {
+            // No query - list all files with their first line as preview
+            const relPath = path.relative(MEMORY_DIR, fullPath);
+            const firstLine = lines[0] ? lines[0].trim().substring(0, 200) : '(empty file)';
+            results.push({
+              file: relPath,
+              line: 1,
+              preview: firstLine
+            });
+          } else {
+            // Search mode - find lines matching query
+            for (let i = 0; i < lines.length; i++) {
+              if (lines[i].toLowerCase().includes(queryLower)) {
+                const relPath = path.relative(MEMORY_DIR, fullPath);
+                results.push({
+                  file: relPath,
+                  line: i + 1,
+                  preview: lines[i].trim().substring(0, 200)
+                });
+                break;
+              }
             }
           }
         } catch (e) {
@@ -210,12 +222,14 @@ async function main() {
       }
 
       case 'search-memory': {
-        const query = args[0];
-        if (!query) throw new Error('Query required: search-memory <query>');
-
+        const query = args[0] || '';
         let directory = null;
         const dirArg = args.find(a => a.startsWith('--directory='));
         if (dirArg) directory = dirArg.split('=')[1];
+
+        if (!query && !directory) {
+          throw new Error('Query or --directory required: search-memory <query> [--directory=<subdir>]');
+        }
 
         const result = await searchMemory(query, directory);
         console.log(JSON.stringify(result, null, 2));
