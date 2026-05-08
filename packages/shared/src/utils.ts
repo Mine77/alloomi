@@ -129,7 +129,10 @@ export function timeBeforeHours(hours: number, now: number = Date.now()): number
   return Math.floor((now - hours * 60 * 60 * 1000) / 1000);
 }
 
-export function timeBeforeHoursMs(hours: number, now: number = Date.now()): number {
+export function timeBeforeHoursMs(
+  hours: number,
+  now: number = Date.now(),
+): number {
   return now - hours * 60 * 60 * 1000;
 }
 
