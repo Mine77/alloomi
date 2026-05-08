@@ -142,7 +142,7 @@ async function getDocument(id) {
   return apiRequest(`/api/rag/documents/${id}`);
 }
 
-async function listInsights(days = 7, limit = 50, channel = null) {
+async function listInsights(days = 7, limit = 50, channel = null, keywords = null) {
   const data = await apiRequest(`/api/insights?days=${days}&limit=${limit}`);
   // Filter by channel if specified (check both groups array and platform field)
   if (channel && data.items) {
@@ -150,6 +150,15 @@ async function listInsights(days = 7, limit = 50, channel = null) {
       (insight.groups && insight.groups.includes(channel)) ||
       insight.platform === channel
     );
+    data.total = data.items.length;
+  }
+  // Filter by keywords if specified (OR logic - any keyword matches)
+  if (keywords && keywords.length > 0 && data.items) {
+    const kws = keywords.map(k => k.toLowerCase());
+    data.items = data.items.filter(insight => {
+      const str = JSON.stringify(insight).toLowerCase();
+      return kws.some(kw => str.includes(kw));
+    });
     data.total = data.items.length;
   }
   return data;
@@ -248,14 +257,16 @@ async function main() {
         let days = 7;
         let limit = 50;
         let channel = null;
+        let keywords = [];
 
         for (const arg of args) {
           if (arg.startsWith('--days=')) days = Number.parseInt(arg.split('=')[1]);
           if (arg.startsWith('--limit=')) limit = Number.parseInt(arg.split('=')[1]);
           if (arg.startsWith('--channel=')) channel = arg.split('=')[1];
+          if (arg.startsWith('--keyword=')) keywords.push(arg.split('=')[1]);
         }
 
-        const result = await listInsights(days, limit, channel);
+        const result = await listInsights(days, limit, channel, keywords);
         console.log(JSON.stringify(result, null, 2));
         break;
       }

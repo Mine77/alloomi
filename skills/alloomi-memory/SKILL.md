@@ -324,6 +324,9 @@ node $SKILL_DIR/scripts/alloomi-memory.cjs list-insights --channel=gmail --days=
 node $SKILL_DIR/scripts/alloomi-memory.cjs list-insights --channel=telegram --days=30
 node $SKILL_DIR/scripts/alloomi-memory.cjs list-insights --channel=whatsapp
 
+# Filter insights by keyword (supports multiple keywords - OR logic)
+node $SKILL_DIR/scripts/alloomi-memory.cjs list-insights --keyword=screen --keyword=linkedin --days=30
+
 # Get single insight
 node $SKILL_DIR/scripts/alloomi-memory.cjs get-insight insight_xxx
 
@@ -385,7 +388,7 @@ node $SKILL_DIR/scripts/alloomi-memory.cjs search-all "person/project/topic"
 
 # Then optionally get details from specific sources
 node $SKILL_DIR/scripts/alloomi-memory.cjs search-memory "person" --directory=people
-node $SKILL_DIR/scripts/alloomi-memory.cjs list-insights --days=30
+node $SKILL_DIR/scripts/alloomi-memory.cjs list-insights --days=30 --keyword=<keyword>
 ```
 
 **Channel-Based Message Queries:**
