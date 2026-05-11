@@ -7,8 +7,8 @@ on:
     branches: [main]
 
 jobs:
-  type-check:
-    name: TypeScript Type Check
+  pre-test:
+    name: Lint, Format & Type Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -27,13 +27,19 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Lint
+        run: pnpm lint
+
+      - name: Format check
+        run: pnpm format:check
+
       - name: Type check
         run: pnpm tsc
 
   test:
     name: Node.js ${{ matrix.node-version }} Test
     runs-on: ubuntu-latest
-    needs: type-check
+    needs: [pre-test]
     strategy:
       matrix:
         node-version: [22, 24]
