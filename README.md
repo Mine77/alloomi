@@ -29,14 +29,6 @@ Alloomi is an open-source AI workspace that runs on your desktop. It connects to
   </a>
 
 
-## The Problem
-
-Your work happens across Telegram, Slack, Gmail, Calendar, Jira, Notion, and a dozen other tools. Context lives in all of them — who said what, what was decided, what's overdue.
-
-Your AI tool knows none of this. Every session starts from zero. You spend the first five minutes explaining what should already be obvious.
-
-
-
 
 ## Features
 
