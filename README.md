@@ -6,7 +6,7 @@
 
 <br>
 
-**Your work has context. Now your AI does too.**
+**Your AI Mates that Remembers All Work Details.**
 
 <br>
 
@@ -22,8 +22,6 @@
 ## What is Alloomi?
 
 Alloomi is an open-source AI workspace that runs on your desktop. It connects to the tools you already use — messaging apps, email, calendar, documents, project trackers — and builds a working memory of your people, projects, and decisions.
-
-When you ask Alloomi something, it already knows the context. You don't have to re-explain your work every time.
 
 ### Download to Try
  <a href="https://github.com/melandlabs/release">
@@ -45,14 +43,10 @@ Your AI tool knows none of this. Every session starts from zero. You spend the f
 | | Capability | What it does |
 |---|---|---|
 | 🔌 | **18 Platform Connectors** | Telegram, WhatsApp, WeChat, DingTalk, Feishu, Gmail, Google Calendar, Outlook, Google Docs, X/Twitter, Instagram, LinkedIn, Facebook Messenger, Jira, HubSpot, Asana, iMessage, QQ, RSS — messages, emails, calendar events, documents, and project updates flow in continuously |
-| 🎯 | **EventRank Insights** | PageRank-inspired algorithm scores signals by importance, urgency, and relevance to you — extracts tasks, deadlines, who's waiting on whom, and surfaces a prioritized inbox |
-| 🧠 | **Three-Tier Memory** | Short → mid → long-term memory with a progressive forgetting engine — scores by access frequency, recency, and importance, summarizes and archives over time, recalls context from months ago |
-| 🤖 | **AI Agent** | Planning + execution workflow — drafts replies, schedules meetings, creates documents, browses the web, runs code in a sandbox, executes scheduled cron jobs. Supports Claude, GPT, Gemini, DeepSeek, and 15+ models |
+| 🧠 | **Working Memory** | Short → mid → long-term memory with a progressive forgetting engine — scores by access frequency, recency, and importance, summarizes and archives over time, recalls context from months ago |
 | 📄 | **Document Skills** | Create and edit DOCX, XLSX, PPTX, PDF — with formulas, formatting, tracked changes, OCR, and merge/split |
-| 🔍 | **Document RAG** | Upload documents, ask questions, get answers with sources — local vector storage via SQLite-vec, chunking, embeddings |
 | ⏰ | **Automation** | Scheduled jobs with cron expressions, intervals, or one-time triggers — agent-driven execution with timeout recovery and history |
 | 🖥️ | **Desktop App** | Native app for Windows, macOS, Linux via Tauri — local-first storage with IndexedDB + SQLite, AES-256 encryption, no data leaves your machine |
-| 🌐 | **Web Search** | Brave Search integration for real-time web and news queries when the agent needs current information |
 
 <p align="center">
   <img src="screenshots/components.png" alt="Architecture" width="100%">
