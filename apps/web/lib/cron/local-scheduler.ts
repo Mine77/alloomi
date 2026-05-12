@@ -21,6 +21,10 @@ import { db } from "../db/index";
 import { characters, jobExecutions, scheduledJobs } from "../db/schema";
 import { eq } from "drizzle-orm";
 import type { ScheduledJob } from "@/lib/db/schema";
+import {
+  runDailyInsightAnalyticsMaintenanceIfDue,
+  runInsightMaintenanceIfDue,
+} from "./insight-maintenance";
 
 // Track running jobs to prevent duplicate executions within the same scheduler cycle
 const runningJobs = new Set<string>();
@@ -170,6 +174,13 @@ async function checkAndExecuteDueJobs() {
   }
 
   isProcessing = true;
+
+  try {
+    await runDailyInsightAnalyticsMaintenanceIfDue(schedulerUserId);
+    await runInsightMaintenanceIfDue(schedulerUserId);
+  } catch (error) {
+    console.error("[LocalScheduler] Error checking for due jobs:", error);
+  }
 
   try {
     // First, recover any stuck jobs (runs every minute as part of the scheduler cycle)
